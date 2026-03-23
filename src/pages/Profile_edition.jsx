@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "../lib/supabase"
-import { updateProfile } from "../services/profileService"
+import { updateProfile, save_lat_and_long } from "../services/profileService"
 import { upload_profile_photo, get_profile_photo_Url } from "../services/mediaService"
 import { useNavigate } from "react-router-dom"; 
 import Cropper from "react-easy-crop"
@@ -21,8 +21,13 @@ function EditProfile() {
     accept_donation: false,
     pet_donation: false,
     food_restrictions: "",
-    photo_url: ""
-
+    photo_url: "",
+    city: "",
+    state: "",
+    neighborhood:"",
+    address:"",
+    address_number:"",
+    address_complement:"",
   })
 
   // 🔄 Carregar dados do banco
@@ -50,7 +55,13 @@ function EditProfile() {
           accept_donation: profile.accept_donation || false,
           pet_donation: profile.pet_donation || false,
           food_restrictions: profile.food_restrictions || "",
-          photo_url: profile.photo_url || ""
+          photo_url: profile.photo_url || "",
+          city: profile.city || "",
+          state: profile.state || "",
+          neighborhood: profile.neighborhood || "",
+          address: profile.address || "",
+          address_number: profile.address_number || "",
+          address_complement: profile.address_complement|| "",
         })
       }
     }
@@ -76,6 +87,8 @@ function EditProfile() {
       if (!user) return
 
       await updateProfile(user.id, form)
+      await save_lat_and_long(user.id,form)
+      
 
       alert("Perfil atualizado!")
       navigate("/profile")
@@ -178,11 +191,57 @@ function EditProfile() {
         style={inputStyle}
       />
 
-      {/* Localização */}
+      {/* Estado */}
       <input
-        name="location"
-        placeholder="Localização"
-        value={form.location}
+        name="state"
+        placeholder="Estado"
+        value={form.state}
+        onChange={handleChange}
+        style={inputStyle}
+      />
+
+      {/* Cidade */}
+      <input
+        name="city"
+        placeholder="Cidade"
+        value={form.city}
+        onChange={handleChange}
+        style={inputStyle}
+      />
+
+      {/* Bairro */}
+      <input
+        name="neighborhood"
+        placeholder="Bairro"
+        value={form.neighborhood}
+        onChange={handleChange}
+        style={inputStyle}
+      />
+
+      {/* Endereço */}
+      <input
+        name="address"
+        placeholder="Endereço"
+        value={form.address}
+        onChange={handleChange}
+        style={inputStyle}
+      />
+
+      {/* Número do endereço */}
+      <input
+        name="address_number"
+        placeholder="Nº"
+        value={form.address_number}
+        onChange={handleChange}
+        style={inputStyle}
+      />
+
+      
+      {/* Complemento do endereço */}
+      <input
+        name="address_complement"
+        placeholder="Complemento"
+        value={form.address_complement}
         onChange={handleChange}
         style={inputStyle}
       />

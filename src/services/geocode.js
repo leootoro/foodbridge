@@ -1,5 +1,5 @@
 export async function getLatLng(address) {
-  const apiKey = "SUA_API_KEY"
+  const apiKey = "2270a43415d6425ca533ff6f400b96c2"
 
   const response = await fetch(
     `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}`

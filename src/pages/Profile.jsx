@@ -103,7 +103,11 @@ function Profile() {
                   Conversas
                 </button>
               </li>
-              <li>Mapa</li>
+              <li>
+                <button className="button_map" onClick={() => navigate("/map")}>
+                  Mapa
+                </button>
+              </li>
               <li>Configurações</li>
             </ul>
           </nav>

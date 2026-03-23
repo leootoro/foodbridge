@@ -10,7 +10,7 @@ function MapPage() {
   const [user, setUser] = useState(null)
 
   const [filters, setFilters] = useState({
-    type: "opposite", // donor / receiver / all
+    type: "", // donor / receiver / all
     city: "",
     state: "",
     neighborhood: "",
@@ -19,8 +19,7 @@ function MapPage() {
   })
 
   useEffect(() => {
-    async function loadData() {
-
+    async function loadUser() {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
 
@@ -32,16 +31,12 @@ function MapPage() {
         .eq("id", currentUser.id)
         .single()
 
-      let query = supabase.from("profiles").select("*")
-
-      // 🔥 filtro tipo oposto
-      if (filters.type === "opposite") {
-        query = query.eq("is_donor", !myProfile.is_donor)
-      }
-
-      if (filters.type === "same") {
-        query = query.eq("is_donor", myProfile.is_donor)
-      }
+      // 🔥 define filtro inicial oposto
+      setFilters(f => ({
+        ...f,
+        type: myProfile.is_donor ? "Recebedor" : "Doador"
+      }))
+    
 
       // 🔥 filtros adicionais
       if (filters.city) {
@@ -78,10 +73,14 @@ function MapPage() {
       {/* 🔥 FILTROS */}
       <div className="filters">
 
-        <select onChange={(e) => setFilters(f => ({ ...f, type: e.target.value }))}>
-          <option value="opposite">Tipo oposto</option>
-          <option value="same">Mesmo tipo</option>
-          <option value="all">Todos</option>
+        <select
+          value={filters.type}
+          onChange={(e) =>
+            setFilters(f => ({ ...f, type: e.target.value }))
+          }
+        >
+          <option value="donor">Doadores</option>
+          <option value="receiver">Recebedores</option>
         </select>
 
         <input
@@ -121,7 +120,11 @@ function MapPage() {
           <option value="false">Não</option>
         </select>
 
+        <button onClick={loadData} className="search-btn">
+          Buscar
+        </button>
       </div>
+
 
       {/* 🗺️ MAPA */}
       <MapContainer center={[-23.55, -46.63]} zoom={12} style={{ height: "100%" }}>
