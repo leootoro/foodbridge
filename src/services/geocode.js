@@ -10,6 +10,7 @@ export async function getLatLng(address) {
   if (data.results.length === 0) return null
 
   const { lat, lng } = data.results[0].geometry
-
+  console.log("📍 Buscando endereço:", address)
+  console.log("📍 Resultado API:", data)
   return { lat, lng }
 }

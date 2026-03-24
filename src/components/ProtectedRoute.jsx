@@ -1,31 +1,35 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../services/authService";
 import { Navigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
-function ProtectedRoute({ children }) {
-
+const ProtectedRoute = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkUser() {
-      const u = await getCurrentUser();
-      setUser(u);
-      setLoading(false);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error("Erro na proteção de rota:", error);
+      } finally {
+        setLoading(false);
+      }
     }
-
     checkUser();
   }, []);
 
   if (loading) {
-    return <p>Carregando...</p>;
+    // Retorna algo visível em vez de tela branca
+    return <div style={{ padding: "20px" }}>Verificando acesso...</div>;
   }
 
   if (!user) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
-}
+};
 
 export default ProtectedRoute;

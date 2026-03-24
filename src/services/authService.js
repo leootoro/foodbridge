@@ -24,7 +24,12 @@ export async function signup(email, password, name) {
       }
     });
 
-    if (error) throw error;
+    if (error){
+      if (error.message.includes("duplicate key")) {
+        throw new Error("Esse nome já está em uso")
+      }
+      throw error;
+    }
 
     return { success: true, user: data.user };
 

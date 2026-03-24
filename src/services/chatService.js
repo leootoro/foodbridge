@@ -85,30 +85,47 @@ export async function sendMessage(chatId, senderId, text) {
 
 export async function getOrCreateChat(userId, otherUserId) {
 
-  // 🔍 procurar chat existente
-  const { data: existing, error } = await supabase
+  const donor =
+    userId < otherUserId ? userId : otherUserId
+
+  const institution =
+    userId < otherUserId ? otherUserId : userId
+
+  // 🔎 tenta buscar
+  const { data: existing } = await supabase
     .from("chats")
     .select("*")
-    .or(
-      `and(donor_id.eq.${userId},institution_id.eq.${otherUserId}),and(donor_id.eq.${otherUserId},institution_id.eq.${userId})`
-    )
+    .eq("donor_id", donor)
+    .eq("institution_id", institution)
     .maybeSingle()
-
-  if (error) throw error
 
   if (existing) return existing
 
-  // ➕ criar novo chat
-  const { data: newChat, error: createError } = await supabase
+  // 🔥 tenta criar
+  const { data, error } = await supabase
     .from("chats")
-    .insert({
-      donor_id: userId,
-      institution_id: otherUserId
-    })
+    .insert([
+      {
+        donor_id: donor,
+        institution_id: institution
+      }
+    ])
     .select()
     .single()
 
-  if (createError) throw createError
+  // 💥 se já existir (race condition)
+  if (error && error.message.includes("duplicate")) {
+    const { data: retry } = await supabase
+      .from("chats")
+      .select("*")
+      .eq("donor_id", donor)
+      .eq("institution_id", institution)
+      .single()
 
-  return newChat
+    return retry
+  }
+
+  if (error) throw error
+
+  return data
 }

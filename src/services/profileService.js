@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { getLatLng } from "../services/geocode"
+import { getLatLng } from "./geocode"
 
 export async function get_Profile(userId) {
 
@@ -16,13 +16,17 @@ export async function get_Profile(userId) {
 
 export async function updateProfile(userId, profileData) {
 
-  const { data, error } = await supabase
+  const {data, error } = await supabase
     .from("profiles")
     .update(profileData)
-    .eq("id", userId);
+    .eq("id", userId)
 
-  if (error) throw error;
-
+  if (error) {
+    if (error.message.includes("duplicate key")) {
+      throw new Error("Esse nome já está em uso")
+    }
+    throw error
+  }
   return data;
 }
 
@@ -41,18 +45,33 @@ export async function updateDonationSettings(userId, settings) {
 
 export async function save_lat_and_long(userId, profile) {
 
-  const address = `${profile.neighborhood}, ${profile.city}, ${profile.state}, ${profile.address}, ${profile.address_number}, ${profile.address_complement}`
+  const addressParts = [
+    profile.address,
+    profile.address_number,
+    profile.neighborhood,
+    profile.city,
+    profile.state
+  ]
+  const fullAddress = addressParts
+    .filter(Boolean)
+    .join(", ")
 
-  const coords = await getLatLng(address)
+  const coords = await getLatLng(fullAddress)
   if (!coords) {
-    console.log("Endereço não encontrado")
     return
   }
-  await supabase
+
+  const { error } = await supabase
     .from("profiles")
     .update({
-      lat: coords?.lat,
-      lng: coords?.lng
+      lat: coords.lat,
+      lng: coords.lng
     })
     .eq("id", userId)
+
+  if (error) {
+    console.error("❌ Erro ao salvar lat/lng:", error)
+  } else {
+    console.log("✅ Coordenadas salvas com sucesso!")
+  }
 }

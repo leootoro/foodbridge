@@ -1,18 +1,24 @@
 .filters {
   position: absolute;
-  top: 20px;
+  top: 80px;
   left: 20px;
-  background: white;
+  width: 260px;
+  background: rgba(77, 76, 76, 0.7);
+  /* background: white; */
   padding: 16px;
-  z-index: 1000;
   border-radius: 16px;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 260px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(29, 28, 28, 0.1);
   font-family: Arial, sans-serif;
+  /* 🔥 ESSENCIAL */
+  max-height: 90vh;
+  overflow-y: auto;
+  pointer-events: auto;
 }
+
 
 .filters input,
 .filters select {
@@ -42,4 +48,38 @@
 
 .search-btn:hover {
   background: #4a9e8b;
+}
+
+/* 🔥 RESET CORRETO DO LEAFLET */
+.leaflet-container {
+  position: relative;
+  z-index: 0;
+}
+
+.leaflet-pane {
+  position: absolute;
+}
+
+.leaflet-tile-pane {
+  z-index: 200;
+}
+
+.leaflet-overlay-pane {
+  z-index: 400;
+}
+
+.leaflet-shadow-pane {
+  z-index: 500;
+}
+
+.leaflet-marker-pane {
+  z-index: 600;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 650;
+}
+
+.leaflet-popup-pane {
+  z-index: 700;
 }

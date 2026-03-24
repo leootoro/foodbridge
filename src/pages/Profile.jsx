@@ -1,7 +1,7 @@
 import "../css/profile.css"
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"; 
-import { get_Profile } from "../services/profileService";
+import { get_Profile, updateProfile } from "../services/profileService";
 import { getUserPosts, getMediaUrl, get_profile_photo_Url } from "../services/mediaService";
 import { getCurrentUser } from "../services/authService";
 import { getOrCreateChat } from "../services/chatService"

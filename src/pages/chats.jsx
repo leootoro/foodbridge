@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { getUserChats, getLastMessage, getUserName } from "../services/chatService"
 import "../css/chats.css"
 
+
 function Chats() {
 
   const navigate = useNavigate()
@@ -55,41 +56,64 @@ function Chats() {
 
     <div className="chat-container">
 
-      <div className="chat-header">
-        <h2>Conversas</h2>
-      </div>
+      <aside className="sidebar_chat">
+        <h2 className="logo">FoodBridge</h2>
 
-      <div className="chat-list">
+        <nav>
+          <ul>
+            <li>
+              <button onClick={() => navigate("/profile")}>
+                Perfil
+              </button>
+            </li>
+            <li className="active">
+              <button onClick={() => navigate("/chats")}>
+                Conversas
+              </button>
+            </li>
+            <li>
+              <button onClick={() => navigate("/map")}>
+                Mapa
+              </button>
+            </li>
+            <li>Configurações</li>
+          </ul>
+        </nav>
+      </aside>
 
-        {chats.map((chat) => (
+      {/* 🔥 CONTEÚDO DO LADO DIREITO */}
+      <div className="chat-content">
 
-          <div
-            key={chat.id}
-            className="chat-item"
-            onClick={() => navigate(`/chat/${chat.id}`)}
-          >
-            <div className="chat-avatar"></div>
+        <div className="chat-header">
+          <h2>Conversas</h2>
+        </div>
 
-            <div className="chat-info">
+        <div className="chat-list">
+          {chats.map((chat) => (
+            <div
+              key={chat.id}
+              className="chat-item"
+              onClick={() => navigate(`/chat/${chat.id}`)}
+            >
+              <div className="chat-avatar"></div>
 
-              <div className="chat-top">
-                <span className="chat-name">{chat.name}</span>
-                <span className="chat-time">{chat.time}</span>
+              <div className="chat-info">
+                <div className="chat-top">
+                  <span className="chat-name">{chat.name}</span>
+                  <span className="chat-time">{chat.time}</span>
+                </div>
+
+                <div className="chat-bottom">
+                  <span className="chat-message">{chat.message}</span>
+
+                  {chat.unread && (
+                    <span className="chat-unread"></span>
+                  )}
+                </div>
               </div>
-
-              <div className="chat-bottom">
-                <span className="chat-message">{chat.message}</span>
-
-                {chat.unread && (
-                  <span className="chat-unread"></span>
-                )}
-              </div>
-
             </div>
-
-          </div>
-
-        ))}
+          ))}
+        </div>
 
       </div>
 

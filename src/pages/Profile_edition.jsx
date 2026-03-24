@@ -4,6 +4,7 @@ import { updateProfile, save_lat_and_long } from "../services/profileService"
 import { upload_profile_photo, get_profile_photo_Url } from "../services/mediaService"
 import { useNavigate } from "react-router-dom"; 
 import Cropper from "react-easy-crop"
+import "../css/profile_edition.css"
 
 function EditProfile() {
 
@@ -88,7 +89,6 @@ function EditProfile() {
 
       await updateProfile(user.id, form)
       await save_lat_and_long(user.id,form)
-      
 
       alert("Perfil atualizado!")
       navigate("/profile")
