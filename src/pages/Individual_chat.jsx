@@ -74,6 +74,13 @@ function Chat() {
 
         const msgs = await getMessages(chatId)
         setMessages(msgs)
+        await supabase
+          .from("messages")
+          .update({ read: true })
+          .eq("chat_id", chatId)
+          .neq("sender_id", currentUser.id)
+          .eq("read", false)
+        console.log("USER:", currentUser)
 
       } catch (err) {
         console.error("Erro ao carregar chat:", err)

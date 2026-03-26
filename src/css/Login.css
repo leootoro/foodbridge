@@ -5,16 +5,20 @@
     box-sizing: border-box;
 }
 body {
-    font-family: 'Open Sans', sans-serif;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  display: flex;
+  justify-content: center;
 }
-.container {
+.login-container {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100%;
     background-color: #ecf0f1;
 }
-.content {
+.login-content {
     background-color: #fff;
     border-radius: 15px;
     width: 1500px;
@@ -23,7 +27,7 @@ body {
     align-items: center;
     position: relative;
 }
-.content::before {
+.login-content::before {
     content: "";
     position: absolute;
     background-color: #58af9b;
@@ -31,11 +35,11 @@ body {
     height: 100%;
     border-top-left-radius: 15px;
     border-bottom-left-radius: 15px;
-
+    z-index: 1;
 
     left: 0;
 }
-.title {
+.login-title {
     font-size: 28px;
     font-weight: bold;
     text-transform: capitalize;
@@ -46,7 +50,7 @@ body {
 .title-second {
     color: #58af9b;
 }
-.description {
+.login-description {
     font-size: 14px;
     font-weight: 300;
     line-height: 30px;
@@ -57,7 +61,7 @@ body {
 .description-second {
     color: #7f8c8d;
 }
-.btn {
+.login-btn {
     border-radius: 15px;
     text-transform: uppercase;
     color: #fff;
@@ -92,39 +96,40 @@ body {
 .first-content {
     display: flex;
 }
-.first-content .second-column {
+.first-content .login-second-column {
     z-index: 11;
 }
-.first-column {
+.login-first-column {
     text-align: center;
     width: 40%;
     z-index: 10;
 }
-.second-column {
+.login-second-column {
     width: 60%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 20;    
 }
-.social-media {
+.login-social-media {
     margin: 1rem 0;
 }
-.link-social-media:not(:first-child){
+.login-link-social-media:not(:first-child){
     margin-left: 10px;
 }
-.link-social-media .item-social-media {
+.login-link-social-media .login-item-social-media {
     transition: background-color .5s;
 }
-.link-social-media:hover .item-social-media{
+.login-link-social-media:hover .login-item-social-media{
     background-color: #58af9b;
     color: #fff;
     border-color: #58af9b;
 }
-.list-social-media {
+.login-list-social-media {
     display: flex;
     list-style-type: none;
 }
-.item-social-media {
+.login-item-social-media {
     border: 1px solid #bdc3c7;
     border-radius: 50%;
     width: 35px;
@@ -133,12 +138,12 @@ body {
     text-align: center;
     color: #95a5a6;
 }
-.form {
+.login-form {
     display: flex;
     flex-direction: column;
     width: 55%;
 }
-.form input {
+.login-form input {
     height: 45px;
     width: 100%;
     border: none;
@@ -149,13 +154,13 @@ input:-webkit-autofill
     -webkit-box-shadow: 0 0 0px 1000px #ecf0f1 inset !important;
     -webkit-text-fill-color: #000 !important;
 }
-.label-input {
+.login-label-input {
     background-color: #ecf0f1;
     display: flex;
     align-items: center;
     margin: 8px;
 }
-.icon-modify {
+.login-icon-modify {
     color: #7f8c8d;
     padding: 0 5px;
 }
@@ -166,11 +171,11 @@ input:-webkit-autofill
     position: absolute;
     display: flex;
 }
-.second-content .first-column {
+.second-content .login-first-column {
     order: 2;
     z-index: -1;
 }
-.second-content .second-column {
+.second-content .login-second-column {
     order: 1;
     z-index: -1;
 }
@@ -186,18 +191,18 @@ input:-webkit-autofill
 
 
 
-.sign-in-js .first-content .first-column {
+.sign-in-js .first-content .login-first-column {
     z-index: -1;
 }
 
-.sign-in-js .second-content .second-column {
+.sign-in-js .second-content .login-second-column {
     z-index: 11;
 }
-.sign-in-js .second-content .first-column {
+.sign-in-js .second-content .login-first-column {
     z-index: 13;
 }
 
-.sign-in-js .content::before {
+.sign-in-js .login-content::before {
     left: 60%;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
@@ -208,35 +213,35 @@ input:-webkit-autofill
     z-index: 12;
 }
 
-.sign-up-js .content::before {
+.sign-up-js .login-content::before {
     animation: slideout 1.3s; /*MODIFIQUEI DE 3s PARA 1.3s*/
 
     z-index: 12;
 }
 
-.sign-up-js .second-content .first-column,
-.sign-up-js .second-content .second-column {
+.sign-up-js .second-content .login-first-column,
+.sign-up-js .second-content .login-second-column {
     z-index: -1;
 }
 
-.sign-up-js .first-content .second-column {
+.sign-up-js .first-content .login-second-column {
     z-index: 11;
 }
 
-.sign-up-js .first-content .first-column {
+.sign-up-js .first-content .login-first-column {
     z-index: 13;    
 }
 
 
 /* DESLOCAMENTO CONTEÚDO ATRÁS DO CONTENT:BEFORE*/
-.sign-in-js .first-content .second-column {
+.sign-in-js .first-content .login-second-column {
 
     z-index: -1;
     position: relative;
     animation: deslocamentoEsq 1.3s; /*MODIFIQUEI DE 3s PARA 1.3s*/
 }
 
-.sign-up-js .second-content .second-column {
+.sign-up-js .second-content .login-second-column {
     position: relative;
     z-index: -1;
     animation: deslocamentoDir 1.3s; /*MODIFIQUEI DE 3s PARA 1.3s*/

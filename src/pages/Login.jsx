@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Importante para a navegação
 import { login, signup, loginComGoogle } from "../services/authService";
+import "../css/Login.css"
 
 function Login() {
   const navigate = useNavigate(); // Inicializa o hook de navegação
@@ -53,24 +54,24 @@ function Login() {
   }
 
   return (
-    <div className={`container ${mode === "signup" ? "sign-up-js" : "sign-in-js"}`}>
+    <div className={`login-container ${mode === "signup" ? "sign-up-js" : "sign-in-js"}`}>
       {/* SEÇÃO DE CADASTRO (Aparece quando o modo é signup) */}
-      <div className="content first-content">
-        <div className="first-column">
-          <h2 className="title title-primary">Bem-Vindo De Volta!</h2>
-          <p className="description description-primary">Se já possui conta</p>
-          <p className="description description-primary">Clique no botão abaixo</p>
-          <button className="btn btn-primary" onClick={() => setMode("signin")}>
+      <div className="login-content first-content">
+        <div className="login-first-column">
+          <h2 className="login-title title-primary">Bem-Vindo De Volta!</h2>
+          <p className="login-description description-primary">Se já possui conta</p>
+          <p className="login-description description-primary">Clique no botão abaixo</p>
+          <button className="login-btn btn-primary" onClick={() => setMode("signin")}>
             sign in
           </button>
         </div>
 
-        <div className="second-column">
-          <h2 className="title title-second">Criar uma Conta</h2>
-          <div className="social-media">
-            <ul className="list-social-media">
-              <a className="link-social-media" href="#" onClick={handleSocialLogin}>
-                  <li className ="item-social-media">
+        <div className="login-second-column">
+          <h2 className="login-title title-second">Criar uma Conta</h2>
+          <div className="login-social-media">
+            <ul className="login-list-social-media">
+              <a className="login-link-social-media" href="#" onClick={handleSocialLogin}>
+                  <li className ="login-item-social-media">
                       <i className ="fa-brands fa-google-plus-g"></i>
                   </li>
               </a>
@@ -78,8 +79,8 @@ function Login() {
           </div>
           <p className="description description-second">ou use o seu email para se cadastrar:</p>
           
-          <form className="form" onSubmit={handleSignup}>
-            <label className="label-input">
+          <form className="login-form" onSubmit={handleSignup}>
+            <label className="login-label-input">
               <i className="far fa-user icon-modify"></i>
               <input 
                 type="text" 
@@ -90,7 +91,7 @@ function Login() {
               />
             </label>
 
-            <label className="label-input">
+            <label className="login-label-input">
               <i className="far fa-envelope icon-modify"></i>
               <input 
                 type="email" 
@@ -101,7 +102,7 @@ function Login() {
               />
             </label>
 
-            <label className="label-input">
+            <label className="login-label-input">
               <i className="fas fa-lock icon-modify"></i>
               <input 
                 type="password" 
@@ -111,37 +112,37 @@ function Login() {
                 onChange={(e) => setSignupPassword(e.target.value)} 
               />
             </label>
-            <button type="submit" className="btn btn-second">sign up</button>
+            <button type="submit" className="login-btn btn-second">sign up</button>
           </form>
         </div>
       </div>
 
       {/* SEÇÃO DE LOGIN (Aparece quando o modo é signin) */}
-      <div className="content second-content">
-        <div className="first-column">
-          <h2 className="title title-primary">Olá, amigo!</h2>
-          <p className="description description-primary">Entre com as suas informações de negócio</p>
-          <p className="description description-primary">e comece a sua jornada conosco</p>
-          <button className="btn btn-primary" onClick={() => setMode("signup")}>
+      <div className="login-content second-content">
+        <div className="login-first-column">
+          <h2 className="login-title title-primary">Olá, amigo!</h2>
+          <p className="login-description description-primary">Entre com as suas informações de negócio</p>
+          <p className="login-description description-primary">e comece a sua jornada conosco</p>
+          <button className="login-btn btn-primary" onClick={() => setMode("signup")}>
             sign up
           </button>
         </div>
 
-        <div className="second-column">
-          <h2 className="title title-second">Faça Login aqui</h2>
-          <div className="social-media">
-            <ul className="list-social-media">
-              <a className ="link-social-media" href="#" onClick={handleSocialLogin}>
-                  <li className ="item-social-media">
+        <div className="login-second-column">
+          <h2 className="login-title title-second">Faça Login aqui</h2>
+          <div className="login-social-media">
+            <ul className="login-list-social-media">
+              <a className ="login-link-social-media" href="#" onClick={handleSocialLogin}>
+                  <li className ="login-item-social-media">
                       <i className ="fa-brands fa-google-plus-g"></i>
                   </li>
               </a>
             </ul>
           </div>
-          <p className="description description-second">ou use a sua conta de email:</p>
+          <p className="login-description description-second">ou use a sua conta de email:</p>
 
-          <form className="form" onSubmit={handleLogin}>
-            <label className="label-input">
+          <form className="login-form" onSubmit={handleLogin}>
+            <label className="login-label-input">
               <i className="far fa-envelope icon-modify"></i>
               <input 
                 type="email" 
@@ -152,7 +153,7 @@ function Login() {
               />
             </label>
 
-            <label className="label-input">
+            <label className="login-label-input">
               <i className="fas fa-lock icon-modify"></i>
               <input 
                 type="password" 
@@ -164,7 +165,7 @@ function Login() {
             </label>
 
             <a className="password" href="#">Esqueceu a sua senha?</a>
-            <button type="submit" className="btn btn-second">sign in</button>
+            <button type="submit" className="login-btn btn-second">sign in</button>
           </form>
         </div>
       </div>

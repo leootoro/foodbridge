@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import "../css/MapPage.css"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
@@ -6,10 +6,25 @@ import { supabase } from "../lib/supabase"
 import { getCurrentUser } from "../services/authService"
 import {getOrCreateChat} from "../services/chatService"
 import BackButton from "../components/BackButton"
+import { Circle } from "react-leaflet"
 
+function getDisplayLocation(profile) {
+  if (profile.show_exact_location) {
+    return [profile.lat, profile.lng]
+  }
+
+  const seed = profile.id.charCodeAt(0) // pseudo fixo
+  const offset = 0.001
+
+  const randomLat = profile.lat + ((seed % 10) - 5) * (offset / 10)
+  const randomLng = profile.lng + ((seed % 7) - 3) * (offset / 10)
+
+  return [randomLat, randomLng]
+}
 
 function MapPage() {
 
+  const [myProfile, setMyProfile] = useState(null)
   const [profiles, setProfiles] = useState([])
   const [user, setUser] = useState(null)
 
@@ -60,7 +75,7 @@ function MapPage() {
         .single()
 
       console.log("📄 Meu profile:", myProfile)
-
+      setMyProfile(myProfile)
       if (error) {
         console.error("Erro ao buscar profile:", error)
         return
@@ -91,7 +106,7 @@ function MapPage() {
       console.log("❌ Usuário ainda não carregado")
       return
     }
-
+    
     let query = supabase.from("profiles").select("*")
 
     if (filters.type === "donor") {
@@ -130,8 +145,23 @@ function MapPage() {
     }
 
     console.log("📍 Profiles encontrados:", data)
+    const filteredProfiles = data.filter(p => {
 
-    setProfiles(data)
+      // não mostra você mesmo
+      if (p.id === myProfile.id) return false
+
+      // se não quer aparecer no mapa
+      if (!p.show_on_map) return false
+
+      // se ele só quer tipo oposto
+      if (p.show_only_to_opposite) {
+        return p.is_donor !== myProfile.is_donor
+      }
+
+      // caso normal
+      return true
+    })
+    setProfiles(filteredProfiles)
   }
 
   // 🔥 separa profiles válidos
@@ -174,32 +204,35 @@ function MapPage() {
           value={filters.neighborhood}
           onChange={(e) => setFilters(f => ({ ...f, neighborhood: e.target.value }))}
         />
+        {myProfile?.is_donor && (
+          <>
+            <select
+              onChange={(e) =>
+                setFilters(f => ({
+                  ...f,
+                  accept_donation: e.target.value === "" ? null : e.target.value === "true"
+                }))
+              }
+            >
+              <option value="">Aceita doação (todos)</option>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
 
-        <select
-          onChange={(e) =>
-            setFilters(f => ({
-              ...f,
-              accept_donation: e.target.value === "" ? null : e.target.value === "true"
-            }))
-          }
-        >
-          <option value="">Aceita doação (todos)</option>
-          <option value="true">Sim</option>
-          <option value="false">Não</option>
-        </select>
-
-        <select
-          onChange={(e) =>
-            setFilters(f => ({
-              ...f,
-              pet_donation: e.target.value === "" ? null : e.target.value === "true"
-            }))
-          }
-        >
-          <option value="">Pet (todos)</option>
-          <option value="true">Sim</option>
-          <option value="false">Não</option>
-        </select>
+            <select
+              onChange={(e) =>
+                setFilters(f => ({
+                  ...f,
+                  pet_donation: e.target.value === "" ? null : e.target.value === "true"
+                }))
+              }
+            >
+              <option value="">Pet (todos)</option>
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </>
+        )};
 
         <button onClick={loadData} className="search-btn">
           Buscar
@@ -218,64 +251,93 @@ function MapPage() {
         {validProfiles.map(p => {
           console.log("📌 Renderizando marker:", p)
 
+          if (!p.show_on_map) return null
+
+          const position = getDisplayLocation(p)
+
           return (
-            <Marker key={p.id} position={[p.lat, p.lng]}>
-              <Popup>
-                <strong>{p.name}</strong><br />
-                {p.city} - {p.neighborhood}<br />
-                {p.accept_donation ? "Aceitando doação" : "Não pegando doação no momento"}
-                <br /><br />
+            <React.Fragment key={p.id}>
 
-                {/* BOTÃO VER PERFIL - Usando redirecionamento nativo */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Força a saída do mapa sem deixar o React tentar limpar o Popup
-                    window.location.href = `/profile/${p.id}`;
+              {/* 🔵 CÍRCULO (se localização NÃO for exata) */}
+              {!p.show_exact_location && (
+                <Circle
+                  center={position}
+                  radius={500}
+                  pathOptions={{
+                    color: "#58af9b",
+                    fillColor: "#58af9b",
+                    fillOpacity: 0.2
                   }}
-                  style={{
-                    background: "#58af9b",
-                    color: "white",
-                    border: "none",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    marginRight: "8px"
-                  }}
-                >
-                  Ver perfil
-                </button>
-                  
-                {/* BOTÃO CONVERSAR */}
-                <button
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      const { data: { user: currentUser } } = await supabase.auth.getUser();
-                      if (!currentUser) return;
+                />
+              )}
 
-                      const chat = await getOrCreateChat(currentUser.id, p.id);
-                      if (chat && chat.id) {
-                        // Redireciona nativamente para evitar o erro de 'removeChild'
-                        window.location.href = `/chat/${chat.id}`;
+              {/* 📍 MARCADOR */}
+              <Marker position={position}>
+                <Popup>
+                  <strong>{p.name}</strong><br />
+                  {p.city} - {p.neighborhood}<br />
+                  {p.accept_donation
+                    ? "Aceitando doação"
+                    : "Não pegando doação no momento"}
+
+                  {!p.show_exact_location && (
+                    <div style={{ fontSize: "12px", color: "gray", marginTop: "5px" }}>
+                      📍 Localização aproximada
+                    </div>
+                  )}
+
+                  <br /><br />
+
+                  {/* BOTÃO PERFIL */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      window.location.href = `/profile/${p.id}`
+                    }}
+                    style={{
+                      background: "#58af9b",
+                      color: "white",
+                      border: "none",
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      marginRight: "8px"
+                    }}
+                  >
+                    Ver perfil
+                  </button>
+
+                  {/* BOTÃO CHAT */}
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      try {
+                        const { data: { user: currentUser } } = await supabase.auth.getUser()
+                        if (!currentUser) return
+
+                        const chat = await getOrCreateChat(currentUser.id, p.id)
+                        if (chat && chat.id) {
+                          window.location.href = `/chat/${chat.id}`
+                        }
+                      } catch (err) {
+                        console.error("Erro ao ir para o chat:", err)
                       }
-                    } catch (err) {
-                      console.error("Erro ao ir para o chat:", err);
-                    }
-                  }}
-                  style={{
-                    background: "#58af9b",
-                    color: "white",
-                    border: "none",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    cursor: "pointer"
-                  }}
-                >
-                  Conversar
-                </button>
-              </Popup>
-            </Marker>
+                    }}
+                    style={{
+                      background: "#58af9b",
+                      color: "white",
+                      border: "none",
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Conversar
+                  </button>
+                </Popup>
+              </Marker>
+
+            </React.Fragment>
           )
         })}
       </MapContainer>

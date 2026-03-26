@@ -6,6 +6,18 @@ import { getUserPosts, getMediaUrl, get_profile_photo_Url } from "../services/me
 import { getCurrentUser } from "../services/authService";
 import { getOrCreateChat } from "../services/chatService"
 
+
+function show_location(profile) {
+
+  if (!profile) return "Carregando..."
+
+  if (profile.show_exact_location) {
+    return `${profile.address} ${profile.address_number} ${profile.address_complement}, ${profile.neighborhood} - ${profile.state}`
+  }
+
+  return `${profile.address}, ${profile.neighborhood} - ${profile.state}`
+}
+
 function Profile() {
 
   const { userId } = useParams()
@@ -108,7 +120,11 @@ function Profile() {
                   Mapa
                 </button>
               </li>
-              <li>Configurações</li>
+              <li>
+                <button className="button_config" onClick={() => navigate("/config")}>
+                  Configurações
+                </button>
+              </li>
             </ul>
           </nav>
         </aside>
@@ -143,7 +159,7 @@ function Profile() {
               ></div>
             </div>
 
-            <p className="location">📍{profile?.location}</p>
+            <p className="location">📍{show_location(profile)}</p>
 
             <p className="bio">{profile?.bio}</p>
 

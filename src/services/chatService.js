@@ -23,7 +23,7 @@ export async function getLastMessage(chatId) {
     .eq("chat_id", chatId)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (error && error.code !== "PGRST116") throw error
 
@@ -51,7 +51,7 @@ export async function getChatById(chatId) {
     .from("chats")
     .select("*")
     .eq("id", chatId)
-    .single()
+    .maybeSingle()
 
   if (error) throw error
   return data
@@ -111,7 +111,7 @@ export async function getOrCreateChat(userId, otherUserId) {
       }
     ])
     .select()
-    .single()
+    .maybeSingle()
 
   // 💥 se já existir (race condition)
   if (error && error.message.includes("duplicate")) {
@@ -120,7 +120,7 @@ export async function getOrCreateChat(userId, otherUserId) {
       .select("*")
       .eq("donor_id", donor)
       .eq("institution_id", institution)
-      .single()
+      .maybeSingle()
 
     return retry
   }

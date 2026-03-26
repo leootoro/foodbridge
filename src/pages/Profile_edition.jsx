@@ -28,7 +28,7 @@ function EditProfile() {
     neighborhood:"",
     address:"",
     address_number:"",
-    address_complement:"",
+    address_complement:""
   })
 
   // 🔄 Carregar dados do banco
@@ -62,7 +62,7 @@ function EditProfile() {
           neighborhood: profile.neighborhood || "",
           address: profile.address || "",
           address_number: profile.address_number || "",
-          address_complement: profile.address_complement|| "",
+          address_complement: profile.address_complement|| ""
         })
       }
     }

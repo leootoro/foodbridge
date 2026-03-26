@@ -1,0 +1,56 @@
+.config-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.config-container h1 {
+  margin-bottom: 20px;
+}
+
+.config-section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.config-section h2 {
+  margin-bottom: 15px;
+  color: #58af9b;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.config-item label {
+  font-size: 14px;
+  max-width: 70%;
+}
+
+.config-button {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  background: #58af9b;
+  color: white;
+  cursor: pointer;
+}
+
+.config-button:hover {
+  background: #4a9e8b;
+}
+
+.config-button.danger {
+  background: #e74c3c;
+}
+
+.config-button.danger:hover {
+  background: #c0392b;
+}

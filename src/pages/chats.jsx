@@ -3,7 +3,37 @@ import { supabase } from "../lib/supabase"
 import { useNavigate } from "react-router-dom"
 import { getUserChats, getLastMessage, getUserName } from "../services/chatService"
 import "../css/chats.css"
+import { get_profile_photo_Url } from "../services/mediaService"
+import { get_Profile } from "../services/profileService"
 
+function formatDate(dateString) {
+  if (!dateString) return ""
+
+  const date = new Date(dateString)
+  const now = new Date()
+
+  const isToday =
+    date.toDateString() === now.toDateString()
+
+  const yesterday = new Date()
+  yesterday.setDate(now.getDate() - 1)
+
+  const isYesterday =
+    date.toDateString() === yesterday.toDateString()
+
+  if (isToday) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  }
+
+  if (isYesterday) {
+    return "Ontem"
+  }
+
+  return date.toLocaleDateString("pt-BR")
+}
 
 function Chats() {
 
@@ -28,6 +58,7 @@ function Chats() {
               ? chat.institution_id
               : chat.donor_id
 
+          const other_profile = await get_Profile(otherUserId)
           const name = await getUserName(otherUserId)
           const lastMessage = await getLastMessage(chat.id)
 
@@ -35,17 +66,26 @@ function Chats() {
             id: chat.id,
             name: name || "Usuário",
             message: lastMessage?.message_text || "Sem mensagens",
+            lastDate: lastMessage?.created_at || null,
+            other_profile, 
             time: lastMessage
               ? new Date(lastMessage.created_at).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit"
                 })
               : "",
-            unread: lastMessage ? !lastMessage.read : false
+            unread:
+              lastMessage &&
+              !lastMessage.read &&
+              lastMessage.sender_id !== user.id
           }
         })
       )
-
+      formattedChats.sort((a, b) => {
+        if (!a.lastDate) return 1
+        if (!b.lastDate) return -1
+        return new Date(b.lastDate) - new Date(a.lastDate)
+      })
       setChats(formattedChats)
     }
 
@@ -95,12 +135,23 @@ function Chats() {
               className="chat-item"
               onClick={() => navigate(`/chat/${chat.id}`)}
             >
-              <div className="chat-avatar"></div>
-
+            
+              <img
+                src={
+                  chat.other_profile?.photo_url
+                    ? get_profile_photo_Url(chat.other_profile.photo_url)
+                    : "/default_user.png"
+                }
+                
+                alt="avatar"
+                style={avatarStyle}
+              />
               <div className="chat-info">
                 <div className="chat-top">
                   <span className="chat-name">{chat.name}</span>
-                  <span className="chat-time">{chat.time}</span>
+                  <span className="chat-time">
+                    {formatDate(chat.lastDate)}
+                  </span>
                 </div>
 
                 <div className="chat-bottom">
@@ -122,3 +173,10 @@ function Chats() {
 }
 
 export default Chats
+
+const avatarStyle = {
+  width: "50px",
+  height: "50px",
+  borderRadius: "50%",
+  objectFit: "cover",
+}
