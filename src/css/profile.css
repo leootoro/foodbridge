@@ -1,18 +1,27 @@
-.profile-page{
-  display:flex;
-  min-height:100vh;
+/* --- AJUSTE NO CONTAINER PRINCIPAL --- */
+.profile-page {
+  display: flex;
+  width: 100%; /* Garante que ocupe a largura toda */
+  min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
-  background:#f6f7f7;
+  background: #f6f7f7;
+  margin: 0;
+  padding: 0;
+  align-items: stretch; /* Garante que a sidebar e o conteúdo tenham a mesma altura */
 }
-
 /* SIDEBAR */
 
-.sidebar{
-  width:230px;
-  background:#e7f0ec;
-  padding:30px 20px;
+.sidebar {
+  width: 230px;
+  min-width: 230px; /* Impede a sidebar de encolher */
+  background: #e7f0ec;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky; /* Mantém a sidebar fixa ao rolar */
+  top: 0;
 }
-
 .logo{
   color:#2e8b75;
   margin-bottom:40px;
@@ -20,14 +29,32 @@
 
 .sidebar ul{
   list-style:none;
-  padding:0;
+  padding:10px 0;
+  width: 100%;
+}
+/* .sidebar.active{
+  align-items:center;
+} */
+
+.sidebar li {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Alinha o texto à esquerda, não no centro */
+  padding: 10px 20px; /* Ajustado preenchimento lateral */
+  border-radius: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  height: 45px; /* Aumentado para caber o texto confortavelmente */
+  width: 100%;
+  font-size: 18px;
 }
 
-.sidebar li{
-  padding:12px;
-  border-radius:8px;
-  margin-bottom:10px;
-  cursor:pointer;
+.sidebar li:hover{
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .sidebar li.active{
@@ -75,52 +102,97 @@
 
 .location{
   color:#666;
+  font-size:16px;
+  margin: 10px 0;
 }
 
 .bio{
-  margin:10px 0;
+  margin:18px 0;
   color:#444;
+  font-size: 17px
 }
 
 .profile-buttons{
   margin-top:10px;
 }
 
-.btn-primary{
-  background:#2e8b75;
+.btn-primary-profile{
+  background:#58af9b;
   color:white;
-  border:none;
   padding:10px 20px;
-  border-radius:20px;
+  border-radius:25px;
   margin-right:10px;
   cursor:pointer;
+  border: 2px solid #000;
+  margin: 10px 0;
+  font-size: 17px
 }
 
-.btn-secondary{
-  background:#7bb5a6;
+.btn-secondary-profile{
+  background:#58af9b;
   color:white;
-  border:none;
   padding:10px 20px;
-  border-radius:20px;
+  border-radius:25px;
+  border: 2px solid #000;
   cursor:pointer;
+  margin: 10px 15px;
+  font-size: 17px;
+  display: inline-flex; 
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary-profile:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-primary-profile:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/*Efeito quando clica (:active) */
+.btn-secondary-profile:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/*Efeito quando clica (:active) */
+.btn-primary-profile:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 /* CARDS */
 
-.profile-cards{
-  display:flex;
-  gap:20px;
-  margin-bottom:30px;
+.profile-cards {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  /* O stretch faz o card da esquerda esticar até a altura do mapa */
+  align-items: stretch; 
+  flex-wrap: wrap;
 }
 
-.card{
-  background:white;
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-  flex:1;
-}
+.profile-cards .card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  /* Flex: 1 faz com que eles tentem ocupar o mesmo espaço horizontal */
+  flex: 1; 
+  min-width: 350px;
+  /* Garante que o conteúdo interno também se comporte bem */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: auto; /* Permite que o card encolha se houver pouco conteúdo */
+  max-height: 400px; /* Define um limite para não ficar gigante */
+  font-size: 18px;
 
+}
 
 /* RESTRIÇÕES */
 
@@ -157,11 +229,15 @@
   font-size:13px;
 }
 
-/* MAP */
+/* SEGUNDO CONTAINER (Mapa) */
+.map-card {
+  flex: 1.5 !important; /* Dá um pouco mais de destaque ao mapa */
+}
 
 .map-card iframe{
   width:100%;
-  height:150px;
+  height:100%;
+  min-height: 250px;
   border:none;
   border-radius:10px;
   margin-top:10px;
@@ -171,12 +247,14 @@
 
 .gallery h2{
   margin-bottom:15px;
+  margin-bottom: 40px;
 }
 
 .gallery-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:15px;
+  row-gap: 22px;
 }
 
 .gallery-grid img{
@@ -184,6 +262,11 @@
   border-radius:10px;
   height:160px;
   object-fit:cover;
+}
+
+.gallery-grid img:hover{
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .status-container {
@@ -217,6 +300,19 @@
   align-items: center;
   margin: 10px 0;
 }
+
+.switch-row span {
+  font-size: 16px; /* Texto maior para melhor leitura */
+  color: #333;
+  font-weight: 500;
+  font-size: 18px
+
+}
+.status-text {
+  font-size: 16px; /* Texto do Sim/Não também maior */
+  font-weight: bold;
+}
+
 .status-container {
   display: flex;
   align-items: center;
@@ -235,10 +331,254 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size:24px
 }
 
 .status-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+}
+/* CONTAINER DE ROLAGEM */
+.food-display-scroll-container {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #eef2f3;
+  border-radius: 14px;
+  padding: 12px;
+  background-color: #f8fafb;
+  margin-top: 15px; /* Espaçamento que você pediu */
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+/* LINHA DE CADA ALIMENTO */
+.food-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border: 1px solid #f0f3f5;
+  transition: all 0.2s ease;
+}
+.food-item-row:hover {
+  transform: translateY(-1px);
+  border-color: #58af9b;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+/* NOME E BADGE */
+.food-name {
+  font-weight: 500;
+  color: #2d3748;
+  font-size: 16px;
+}
+/* ESTILO DA BARRA DE ROLAGEM */
+.food-display-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.food-display-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+.empty-food-list {
+  text-align: center;
+  padding: 20px;
+  color: #a0aec0;
+  font-size: 13px;
+}
+.food-badge {
+  background-color: #58af9b; /* Cor original do badge */
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px; /* Garante o formato de pílula/bolinha */
+  font-size: 13px;
+  font-weight: bold;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 45px; /* Mantém um padrão visual */
+}
+
+/* Ajuste para que o vídeo no grid pareça uma foto (thumbnail) */
+.video-thumbnail-container {
+  position: relative;
+  height: 160px; /* Mesma altura que você deu para as imgs */
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.video-thumbnail-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none; /* Impede que o vídeo dê play dentro do grid */
+}
+
+/* Um ícone de play por cima para o usuário saber que é vídeo */
+.video-play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 30px;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* 1. CAMADA DE FUNDO (Overlay) - Embaçada */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); /* Preto translúcido */
+  
+  /* 🟢 O SEGREDO DO EMBAÇADO: Funciona nos navegadores modernos */
+  backdrop-filter: blur(8px); 
+  -webkit-backdrop-filter: blur(8px); /* Para Safari */
+  
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Centralização total no meio da tela */
+  z-index: 2000; /* Garante que fique na frente de tudo */
+  padding: 20px;
+  animation: fadeInModal 0.3s ease;
+}
+
+/* 2. CONTAINER DO CONTEÚDO - Tamanho Definido */
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  overflow: hidden; /* Importante para o container cinza embaixo */
+  
+  /* 🟢 TAMANHO DEFINIDO: Largura fixa, mas responsiva */
+  width: 100%;
+  max-width: 550px; /* Largura ideal para fotos de perfil/galeria */
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border: none;
+}
+
+/* 3. WRAPPER DA MÍDIA - Para centralizar a foto/vídeo */
+.modal-media-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fbfbfb; /* Fundo suave atrás da foto se houver espaço */
+  padding: 10px; /* Margem interna para a foto respirar */
+}
+
+.modal-media-wrapper img,
+.modal-media-wrapper video {
+  max-width: 100%;
+  max-height: 70vh; /* Não deixa a foto maior que a tela */
+  height: auto;
+  border-radius: 8px; /* Arredondado suave na foto */
+  object-fit: contain;
+  display: block;
+}
+
+/* 4. CONTAINER CINZA DA MENSAGEM */
+.modal-footer-message {
+  width: 100%;
+  padding: 15px 20px;
+  background-color: #eee; /* 🟢 O CINZA QUE VOCÊ PEDIU */
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #333;
+}
+
+.modal-footer-message p {
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  color: #444;
+}
+
+/* BOTÃO DE FECHAR (X) */
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  /* Garante tamanho igual */
+  width: 35px; 
+  height: 35px;
+  /* Força o círculo */
+  border-radius: 50%; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  /* Evita que o "X" saia do centro se o botão for flex */
+  line-height: 0; 
+  padding: 0;
+}
+
+.modal-close:hover {
+  background: white;
+  color: #f44336; /* Vermelho no hover */
+  transform: scale(1.1);
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-actions-top {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+}
+
+.modal-actions-top button {
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.modal-actions-top .btn-delete:hover {
+  background: #ff4d4d;
+  color: white;
+}
+
+.edit-container textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.edit-container button {
+  margin-top: 8px;
+  margin-right: 5px;
+  padding: 5px 15px;
+  cursor: pointer;
 }

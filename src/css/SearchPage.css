@@ -1,0 +1,376 @@
+/* CONTAINER PRINCIPAL */
+.search-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background-color: #f4f7f6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden; /* Evita scroll na página inteira */
+}
+
+/* HEADER (Barra de Busca) */
+.search-header {
+  background-color: #ffffff;
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.search-bar-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 600px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 15px 12px 50px; /* Espaço para o ícone */
+  border-radius: 25px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f9f9;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #58af9b;
+  background-color: #ffffff;
+  box-shadow: 0 0 8px rgba(88, 175, 155, 0.2);
+}
+
+/* ÁREA DE CONTEÚDO (Filtros + Resultados) */
+.search-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* Permite scroll independente nas colunas */
+}
+
+/* PAINEL DE FILTROS (Esquerda) */
+.search-filters-panel {
+  width: 280px;
+  background-color: #ffffff;
+  padding: 25px;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto; /*Scroll se os filtros forem muitos*/
+}
+
+.search-filters-panel h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.search-filters-panel label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: -5px;
+  font-weight: 600;
+}
+
+.search-filters-panel input,
+.search-filters-panel select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-filters-panel input:focus,
+.search-filters-panel select:focus {
+  border-color: #58af9b;
+}
+
+.filter-apply-btn {
+  background-color: #58af9b;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 15px;
+  transition: background 0.3s;
+}
+
+.filter-apply-btn:hover {
+  background-color: #46907f;
+}
+
+/* ÁREA DE RESULTADOS (Direita) */
+.search-results-area {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto; /* Scroll nos cards */
+}
+
+.no-results {
+  text-align: center;
+  color: #888;
+  margin-top: 50px;
+  font-size: 16px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #58af9b;
+}
+
+/* GRID DE CARDS */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ESTILO DO CARD */
+.profile-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid transparent;
+}
+
+.profile-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  border-color: #eee;
+}
+
+.card-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+  border: 2px solid #f0f0f0;
+}
+
+.card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-info h4 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+/* BADGES (Doador / Recebedor) */
+.badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  width: fit-content;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.donor {
+  background-color: rgba(88, 175, 155, 0.15);
+  color: #3e7c6e;
+}
+
+.badge.receiver {
+  background-color: rgba(255, 152, 0, 0.15);
+  color: #b36b00;
+}
+
+.card-location {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #777;
+}
+
+/* RESPONSIVIDADE (Para telas menores) */
+@media (max-width: 768px) {
+  .search-content {
+    flex-direction: column;
+  }
+  
+  .search-filters-panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    height: auto;
+    max-height: 250px; /* Limita altura em mobile */
+  }
+}
+/* Garante que o container da lista permita ver o que sai dele lateralmente */
+.items-scroll-container {
+  max-height: 200px;
+  /* overflow: visible */
+  overflow-y: auto;
+  overflow-x: visible; /*IMPORTANTE: permite que o tooltip saia para os lados*/
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  position: relative;
+}
+
+/* Linha do item ajustada para alinhar ícone à direita */
+.item-row {
+  display: flex;
+  align-items: center;
+  justify-content:flex-start; /* Separa checkbox do ícone info */
+  padding: 8px 10px;
+  border-bottom: 1px solid #f9f9f9;
+  font-size: 14px;
+}
+
+/* Parte clicável que marca o checkbox */
+.item-main-clickable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1; /* Ocupa todo o espaço da esquerda */
+  cursor: pointer;
+}
+
+.item-row:hover {
+  background: #f0f7f5;
+}
+
+.item-row.selected {
+  background: #eef9f6;
+  font-weight: 500;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  /* Removemos o justify-content: space-between daqui */
+  padding: 8px 10px;
+  border-bottom: 1px solid #f9f9f9;
+  font-size: 14px;
+  position: relative;
+}
+/* Container do ícone */
+.info-tooltip {
+  margin-left: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: #58af9b;
+  cursor: pointer;
+  padding: 5px;
+}
+
+/* O Balão de texto ajustado para não sumir */
+.info-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 250px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 10px;
+  
+  /* Mudança: Posicionamento absoluto fixado à direita e levemente abaixo */
+  position: absolute;
+  z-index: 9999;
+  right: 0;
+  top: 30px; /* Aparece logo abaixo do ícone */
+  
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  pointer-events: none;
+  white-space: normal;
+}
+
+.info-icon:hover {
+  color: #58af9b; /* Cor de destaque do seu tema */
+}
+
+/* Triângulo do balão - Agora apontando para a ESQUERDA */
+.info-tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%; /* Posiciona na borda esquerda do balão */
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #333 transparent transparent; /* Seta para a esquerda */
+}
+
+/* MOSTRAR TOOLTIP AO PASSAR O MOUSE */
+.info-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+/* Container do ícone */
+.info-icon-trigger {
+  color: #58af9b;
+  cursor: help;
+  display: flex;
+  align-items: center;
+}
+
+/* A descrição interna (escondida) */
+.inline-description {
+  display: none; /* Escondido por padrão */
+  background: #333;
+  color: #fff;
+  font-size: 11px;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 5px;
+  line-height: 1.4;
+  width: 100%;
+}
+
+/* QUANDO PASSAR O MOUSE NA LINHA OU NO ÍCONE */
+.info-icon-trigger:hover .inline-description {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 10;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Ajuste no container para ele não cortar o que expandir */
+.item-wrapper-group {
+  position: relative;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.items-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden; /* Evita barra horizontal */
+  max-height: 250px;
+  padding-bottom: 40px; /* Espaço extra no final para o último tooltip não sumir */
+}

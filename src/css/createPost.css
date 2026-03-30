@@ -1,0 +1,95 @@
+.create-post-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #fff;
+  border-radius: 15px;
+}
+
+.post-title {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* ÁREA DA MÍDIA */
+.media-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.crop-container {
+  position: relative; /* Essencial para o Cropper não vazar */
+  width: 100%;
+  height: 400px; /* Altura fixa para a área de corte */
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* SEÇÃO DE CONTROLES EMBAIXO */
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 10; /* Garante que os botões fiquem acima de qualquer camada */
+}
+
+.zoom-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.zoom-slider {
+  width: 100%;
+  cursor: pointer;
+}
+
+.post-caption {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* BOTÕES */
+.post-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+}
+
+.btn-post {
+  background-color: #58af9b;
+  color: white;
+  padding: 10px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: none;
+  color: #666;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-post:hover { background-color: #4a9483; }

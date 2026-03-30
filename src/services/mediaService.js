@@ -85,3 +85,31 @@ export function get_profile_photo_Url(path) {
 
   return data.publicUrl;
 }
+
+// Deleta do Storage e da Tabela Posts
+export async function deletePost(postId, filePath) {
+  // 1. Deleta o arquivo físico no Storage
+  const { error: storageError } = await supabase.storage
+    .from("media")
+    .remove([filePath]);
+
+  if (storageError) throw storageError;
+
+  // 2. Deleta a linha no Banco de Dados
+  const { error: dbError } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", postId);
+
+  if (dbError) throw dbError;
+}
+
+// Atualiza apenas o texto da legenda
+export async function updatePostText(postId, newText) {
+  const { error } = await supabase
+    .from("posts")
+    .update({ text: newText })
+    .eq("id", postId);
+
+  if (error) throw error;
+}

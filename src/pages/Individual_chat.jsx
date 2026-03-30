@@ -80,7 +80,7 @@ function Chat() {
           .eq("chat_id", chatId)
           .neq("sender_id", currentUser.id)
           .eq("read", false)
-        console.log("USER:", currentUser)
+        // console.log("USER:", currentUser)
 
       } catch (err) {
         console.error("Erro ao carregar chat:", err)

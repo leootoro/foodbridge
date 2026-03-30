@@ -7,6 +7,8 @@ import { getCurrentUser } from "../services/authService"
 import {getOrCreateChat} from "../services/chatService"
 import BackButton from "../components/BackButton"
 import { Circle } from "react-leaflet"
+import { getBlockedIds } from "../services/blockService"
+
 
 function getDisplayLocation(profile) {
   if (profile.show_exact_location) {
@@ -37,22 +39,20 @@ function MapPage() {
     pet_donation: null
   })
 
-  async function handleChatClick(otherUserId) {
+  // Função separada que recebe o evento (e) e o ID do outro usuário
+  async function handleChatClick(e, otherUserId) {
+    e.stopPropagation()
+    
     try {
-      const { data } = await supabase.auth.getUser();
-      const currentUser = data.user;
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) return
 
-      if (!currentUser) return;
-
-      const chat = await getOrCreateChat(currentUser.id, otherUserId);
-
+      const chat = await getOrCreateChat(currentUser.id, otherUserId)
       if (chat && chat.id) {
-        console.log("✅ Chat pronto, redirecionando...");
-        // Usamos window.location para forçar a limpeza do Leaflet e evitar tela branca
-        window.location.href = `/chat/${chat.id}`;
+        window.location.href = `/chat/${chat.id}`
       }
-    } catch (error) {
-      console.error("❌ Erro ao processar chat:", error);
+    } catch (err) {
+      console.error("Erro ao ir para o chat:", err)
     }
   }
 
@@ -102,70 +102,78 @@ function MapPage() {
   async function loadData() {
     console.log("🚀 Buscando dados com filtros:", filters)
 
-    if (!user) {
+    if (!user || !myProfile) {
       console.log("❌ Usuário ainda não carregado")
       return
     }
-    
-    let query = supabase.from("profiles").select("*")
+    try{
+      const blockedIds = await getBlockedIds(user.id)
+      let query = supabase.from("profiles").select("*")
 
-    if (filters.type === "donor") {
-      query = query.eq("is_donor", true)
-    }
-
-    if (filters.type === "receiver") {
-      query = query.eq("is_donor", false)
-    }
-
-    if (filters.city) {
-      query = query.ilike("city", `%${filters.city}%`)
-    }
-
-    if (filters.state) {
-      query = query.ilike("state", `%${filters.state}%`)
-    }
-
-    if (filters.neighborhood) {
-      query = query.ilike("neighborhood", `%${filters.neighborhood}%`)
-    }
-
-    if (filters.accept_donation !== null) {
-      query = query.eq("accept_donation", filters.accept_donation)
-    }
-
-    if (filters.pet_donation !== null) {
-      query = query.eq("pet_donation", filters.pet_donation)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error("❌ Erro na query:", error)
-      return
-    }
-
-    console.log("📍 Profiles encontrados:", data)
-    const filteredProfiles = data.filter(p => {
-
-      // não mostra você mesmo
-      if (p.id === myProfile.id) return false
-
-      // se não quer aparecer no mapa
-      if (!p.show_on_map) return false
-
-      // se ele só quer tipo oposto
-      if (p.show_only_to_opposite) {
-        return p.is_donor !== myProfile.is_donor
+      if (filters.type === "donor") {
+        query = query.eq("is_donor", true)
       }
 
-      // caso normal
-      return true
-    })
-    setProfiles(filteredProfiles)
+      if (filters.type === "receiver") {
+        query = query.eq("is_donor", false)
+      }
+
+      if (filters.city) {
+        query = query.ilike("city", `%${filters.city}%`)
+      }
+
+      if (filters.state) {
+        query = query.ilike("state", `%${filters.state}%`)
+      }
+
+      if (filters.neighborhood) {
+        query = query.ilike("neighborhood", `%${filters.neighborhood}%`)
+      }
+
+      if (filters.accept_donation !== null) {
+        query = query.eq("accept_donation", filters.accept_donation)
+      }
+
+      if (filters.pet_donation !== null) {
+        query = query.eq("pet_donation", filters.pet_donation)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error("❌ Erro na query:", error)
+        return
+      }
+
+      console.log("📍 Profiles encontrados:", data)
+      const filteredProfiles = data.filter(p => {
+
+        // não mostra você mesmo
+        if (p.id === myProfile.id) return false
+
+        // se não quer aparecer no mapa
+        if (!p.show_on_map) return false
+
+        // 2. 🛡️ FILTRO DE PRIVACIDADE: Se o ID do perfil estiver na lista de bloqueio, removemos
+        if (blockedIds.includes(p.id)) return false;
+
+        // se ele só quer tipo oposto
+        if (p.show_only_to_opposite) {
+          return p.is_donor !== myProfile.is_donor
+        }
+
+        // caso normal
+        return true
+      })
+      setProfiles(filteredProfiles)
+
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+    }
   }
 
   // 🔥 separa profiles válidos
-  const validProfiles = profiles.filter(p => p.lat && p.lng)
+  const validProfiles = profiles.filter(p => p.lat && p.lng);
   const invalidProfiles = profiles.filter(p => !p.lat || !p.lng)
 
   console.log("✅ Profiles válidos:", validProfiles)
@@ -309,27 +317,25 @@ function MapPage() {
 
                   {/* BOTÃO CHAT */}
                   <button
-                    onClick={async (e) => {
-                      e.stopPropagation()
-                      try {
-                        const { data: { user: currentUser } } = await supabase.auth.getUser()
-                        if (!currentUser) return
-
-                        const chat = await getOrCreateChat(currentUser.id, p.id)
-                        if (chat && chat.id) {
-                          window.location.href = `/chat/${chat.id}`
-                        }
-                      } catch (err) {
-                        console.error("Erro ao ir para o chat:", err)
+                    onClick={(e) => {
+                      // Só executa a função se o chat estiver permitido
+                      if (p.allow_chat_requests !== false) {
+                        handleChatClick(e, p.id)
                       }
                     }}
+                    // O title cria a mensagem nativa ao passar o mouse
+                    title={p.allow_chat_requests === false ? "Essa pessoa desativou o chat" : ""}
+                    // Desabilita o botão fisicamente no HTML
+                    disabled={p.allow_chat_requests === false}
                     style={{
                       background: "#58af9b",
                       color: "white",
                       border: "none",
                       padding: "8px 12px",
                       borderRadius: "8px",
-                      cursor: "pointer"
+                      // Muda o cursor e a opacidade se o chat estiver desativado
+                      cursor: p.allow_chat_requests === false ? "not-allowed" : "pointer",
+                      opacity: p.allow_chat_requests === false ? 0.5 : 1
                     }}
                   >
                     Conversar
