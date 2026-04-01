@@ -7,7 +7,7 @@ export async function getBlockedIds(currentUserId) {
       .from("blocked_users")
       .select("blocked_user_id")
       .eq("user_id", currentUserId);
-
+  
     // 2. Buscar quem ME bloqueou
     const { data: blockedByOthers } = await supabase
       .from("blocked_users")
@@ -34,4 +34,27 @@ export async function blockUser(myId, targetId) {
     .from("blocked_users")
     .insert([{ user_id: myId, blocked_user_id: targetId }]);
   return !error;
+}
+
+// Nova função para remover bloqueio
+export async function unblockUser(myId, targetId) {
+  const { error } = await supabase
+    .from("blocked_users")
+    .delete()
+    .match({ user_id: myId, blocked_user_id: targetId });
+  return !error;
+}
+
+// Função para buscar lista de bloqueados com nomes
+export async function getBlockedUsers_with_name(myId) {
+  const { data, error } = await supabase
+    .from("blocked_users")
+    .select(`
+      blocked_user_id,
+      profiles:blocked_user_id ( name )
+    `)
+    .eq("user_id", myId);
+  
+  if (error) return [];
+  return data;
 }

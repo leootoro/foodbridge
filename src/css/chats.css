@@ -1,13 +1,34 @@
 .chat-container {
   display: flex;
   height: 100vh;
-  width: 100%; /* 🔥 importante */
+  width: 100%;
+  overflow: hidden; /* Evita scroll duplo na página */
+}
+
+.sidebar {
+  width: 230px;
+  min-width: 230px; /* Impede a sidebar de encolher */
+  background: #e7f0ec;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky; /* Mantém a sidebar fixa ao rolar */
+  top: 0;
 }
 
 .chat-header {
-  background: #0f5c4d;
+  background: #6e58af;
   color: white;
-  padding: 20px;
+  padding: 15px 25px;
+  display: flex;
+  align-items: center;
+  min-height: 70px;
+}
+
+.chat-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
 }
 
 .chat-list {
@@ -87,9 +108,41 @@
 
 /* CONTEÚDO */
 .chat-content {
-  margin-left: 250px; /* 🔥 espaço da sidebar */
-  flex: 1;
+  flex: 1; /* Faz este container "empurrar" e ocupar todo o resto da tela */
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-color: #fff;
+}
+
+.sidebar ul{
+  list-style:none;
+  padding:10px 0;
+  width: 100%;
+}
+
+.sidebar li {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Alinha o texto à esquerda, não no centro */
+  padding: 10px 20px; /* Ajustado preenchimento lateral */
+  border-radius: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  height: 45px; /* Aumentado para caber o texto confortavelmente */
+  width: 100%;
+  font-size: 18px;
+}
+
+.sidebar li:hover{
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.sidebar li.active{
+  background:#d0e6de;
+  font-weight:bold;
 }

@@ -57,6 +57,12 @@ function Chat() {
           chat.donor_id === currentUser.id
             ? chat.institution_id
             : chat.donor_id
+      
+        if (otherUserId === currentUser.id) {
+          console.warn("Tentativa de chat consigo mesmo bloqueada.");
+          navigate("/chats");
+          return;
+        }
 
         const { data: profile } = await supabase
           .from("profiles")

@@ -11,22 +11,6 @@ import defaultAvatar from "/default_user.png"
 import { expandedMarketItems } from '../lib/itemCategories';
 import { categoryMapping } from '../lib/itemCategories';
 
-// 1. CORREÇÃO: Movido para fora para evitar erro de inicialização
-const marketItems = [
-  "arroz", "feijão", "macarrão", "leite", "óleo", "açúcar", "café", "sal", "farinha de trigo", 
-  "farinha de milho", "farinha de mandioca", "molho de tomate", "vinagre", 
-  "azeite de oliva", "milho de pipoca", "maionese", "ketchup", "mostarda", "achocolatado", 
-  "chá", "aveia", "cereal matinal", "geleia", "mel", "fermento",
-  "pão de forma", "pão francês", "bisnaguinha", "bolacha","biscoito", "torrada", "bolo",
-  "carnes em geral", "queijo", "presunto", "peito de peru", 
-  "manteiga", "margarina", "iogurte", "requeijão", "creme de leite", "leite condensado", 
-  "salame", "frutas", "hortifruti", "congelados", "água mineral", "suco de caixa", 
-  "suco concentrado", "refrigerante", "água tônica", "cerveja", "vinho", "aguardente",
-  "papel higiênico", "sabonete", "shampoo", "condicionador", "creme dental", "fio dental", 
-  "desodorante", "escova de dentes", "absorvente", "espuma de barbear", "lâmina de barbear", 
-  "algodão", "hastes flexíveis", "detergente", "sabão em pó", "sabão líquido", "amaciante", 
-  "desinfetante", "água sanitária", "limpador multiuso", "álcool em gel"
-];
 
 function SearchPage() {
   const navigate = useNavigate()
@@ -38,7 +22,12 @@ function SearchPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [itemSearch, setItemSearch] = useState("")
   const [selectedItems, setSelectedItems] = useState(["todos"])
+  const [selectedItemsToDonate, setSelectedItemsToDonate] = useState([]);
+  const [useMyItems, setUseMyItems] = useState(false);
+  const [itemSearchDonate, setItemSearchDonate] = useState("");
   
+  const marketItems = expandedMarketItems;
+
   const [filters, setFilters] = useState({
     type: "all",
     city: "",
@@ -48,6 +37,46 @@ function SearchPage() {
     pet_donation: null,
     minRating: 0 // Novo filtro
   })
+  
+  const handleDonateItemToggle = (item) => {
+    if (item === "todos") {
+      setSelectedItemsToDonate(
+        selectedItemsToDonate.includes("todos") ? [] : ["todos"]
+      );
+      return;
+    }
+
+    let newSelection = selectedItemsToDonate.filter(i => i !== "todos");
+
+    const isSelected = newSelection.includes(item);
+
+    // 🔥 SE FOR CATEGORIA
+    if (categoryMapping[item]) {
+      const categoryItems = categoryMapping[item];
+
+      if (isSelected) {
+        // ❌ remove categoria + itens
+        newSelection = newSelection.filter(i => i !== item && !categoryItems.includes(i));
+      } else {
+        // ✅ adiciona categoria + itens
+        newSelection.push(item);
+        categoryItems.forEach(i => {
+          if (!newSelection.includes(i)) {
+            newSelection.push(i);
+          }
+        });
+      }
+    } else {
+      // 🔥 ITEM NORMAL
+      if (isSelected) {
+        newSelection = newSelection.filter(i => i !== item);
+      } else {
+        newSelection.push(item);
+      }
+    }
+
+    setSelectedItemsToDonate(newSelection);
+  };
 
   // Lógica de seleção de itens (Checkboxes)
   const handleItemToggle = (item) => {
@@ -66,6 +95,10 @@ function SearchPage() {
 
   const filteredMarketItems = marketItems.filter(item => 
     item.toLowerCase().includes(itemSearch.toLowerCase())
+  );
+
+  const filteredMarketItemsDonate = marketItems.filter(item =>
+    item.toLowerCase().includes(itemSearchDonate.toLowerCase())
   );
 
   useEffect(() => {
@@ -93,64 +126,111 @@ function SearchPage() {
     loadInitialData()
   }, [navigate])
 
+  useEffect(() => {
+    setSelectedItems([]);
+    setSelectedItemsToDonate([]);
+  }, [filters.type]);
+
   const loadData = useCallback(async () => {
-    if (!myProfile || loading) return
+    if (!myProfile || loading) return;
 
     try {
-      let query = supabase.from("profiles").select("*")
+      let query = supabase.from("profiles").select("*");
 
       // Filtros básicos
-      if (filters.type === "donor") query = query.eq("is_donor", true)
-      if (filters.type === "receiver") query = query.eq("is_donor", false)
-      if (filters.city) query = query.ilike("city", `%${filters.city}%`)
-      if (filters.state) query = query.ilike("state", `%${filters.state}%`)
-      if (filters.neighborhood) query = query.ilike("neighborhood", `%${filters.neighborhood}%`)
-      if (filters.accept_donation !== null) query = query.eq("accept_donation", filters.accept_donation)
-      if (filters.pet_donation !== null) query = query.eq("pet_donation", filters.pet_donation)
-      if (searchTerm.trim()) query = query.ilike("name", `%${searchTerm.trim()}%`)
+      if (filters.type === "donor") query = query.eq("is_donor", true);
+      if (filters.type === "receiver") query = query.eq("is_donor", false);
+      if (filters.city) query = query.ilike("city", `%${filters.city}%`);
+      if (filters.state) query = query.ilike("state", `%${filters.state}%`);
+      if (filters.neighborhood) query = query.ilike("neighborhood", `%${filters.neighborhood}%`);
+      if (filters.accept_donation !== null) query = query.eq("accept_donation", filters.accept_donation);
+      if (filters.pet_donation !== null) query = query.eq("pet_donation", filters.pet_donation);
+      if (searchTerm.trim()) query = query.ilike("name", `%${searchTerm.trim()}%`);
 
-      const { data: profilesData, error } = await query
-      if (error) throw error
+      const { data: profilesData, error: profilesError } = await query;
+      if (profilesError) throw profilesError;
 
-      // 2. BUSCA AS NOTAS PARA CALCULAR MÉDIA
-      const { data: allRatings } = await supabase.from("ratings").select("reviewed_id, rating_number")
+      // 2. BUSCA AS NOTAS (Com tratamento de erro para evitar o 404)
+      const { data: allRatings, error: ratingsError } = await supabase.from("rating").select("reviewed_id, rating_number");
+      
+      if (ratingsError) {
+        console.warn("Tabela de ratings não encontrada ou inacessível. Usando nota padrão.");
+      }
 
-      // 3. PROCESSAMENTO FINAL (Privacidade + Bloqueio + Nota Mínima)
+      // 3. PROCESSAMENTO FINAL
       const finalProfiles = profilesData
         .map(p => {
-            const userRatings = allRatings?.filter(r => r.reviewed_id === p.id) || [];
-            const count = userRatings.length;
-            
-            let avg;
-            if (count < 3) {
-            // Regra de negócio: Menos de 3 avaliações = 5 estrelas
-            avg = 5.0;
-            } else {
-            // Média real para 3 ou mais avaliações
+          const userRatings = allRatings?.filter(r => r.reviewed_id === p.id) || [];
+          const count = userRatings.length;
+          
+          let avg = 5.0; // Padrão para novos
+          if (count >= 3) {
             const sum = userRatings.reduce((acc, curr) => acc + curr.rating_number, 0);
             avg = parseFloat((sum / count).toFixed(1));
-            }
+          }
 
-            return { 
-            ...p, 
-            avgRating: avg,
-            ratingCount: count // Guardamos a contagem caso queira exibir "5.0 (Novo)"
-            };
+          return { ...p, avgRating: avg, ratingCount: count };
         })
         .filter(p => {
-            if (p.id === myProfile.id) return false;
-            if (blockedIds.includes(p.id)) return false;
-            if (p.show_only_to_opposite && p.is_donor === myProfile.is_donor) return false;
-            
-            // O filtro de nota mínima agora respeita a regra (novos sempre passam em filtros < 5)
-            return p.avgRating >= filters.minRating;
+          // --- Trava de Privacidade e Bloqueio ---
+          if (p.id === myProfile.id) return false;
+          if (blockedIds.includes(p.id)) return false;
+          if (p.show_only_to_opposite && p.is_donor === myProfile.is_donor) return false;
+          
+          // 🟢 filtro para DOADOR (instituições)
+          if (myProfile?.is_donor === true) {
+            if (!selectedItemsToDonate.includes("todos") && selectedItemsToDonate.length > 0) {
+              
+              const restrictions = (p.food_restrictions || "")
+                .toLowerCase()
+                .split(",")
+                .map(i => i.trim());
+
+             const blocked = selectedItemsToDonate.some(selected =>
+              restrictions.includes(selected.toLowerCase())
+            );
+              if (blocked) return false;
+            }
+          }
+          // --- Filtro de Nota ---
+          if (p.avgRating < filters.minRating) return false;
+
+          // --- FILTRO DE ALIMENTOS (Agora dentro do filter corretamente) ---
+          // 🔵 MODO RECEBEDOR
+          if (myProfile?.is_donor === false) {
+            if (selectedItems.includes("todos") || selectedItems.length === 0) return true;
+
+            const profileFoodNames = p.food_available?.map(f => f.item.toLowerCase()) || [];
+
+            return selectedItems.every(selected => {
+              const selectedLower = selected.toLowerCase();
+
+              if (selectedLower === "hortifruti" || selectedLower === "congelados") {
+                const itemsInCategory = categoryMapping[selectedLower] || [];
+                return profileFoodNames.some(food => itemsInCategory.includes(food));
+              }
+
+              return profileFoodNames.includes(selectedLower);
+            });
+          }
+
+          // 🟢 MODO DOADOR → NÃO usa esse filtro
+          return true;
         });
 
-      setProfiles(finalProfiles)
+      setProfiles(finalProfiles);
     } catch (err) {
-      console.error("Erro na busca:", err)
+      console.error("Erro na busca:", err);
     }
-  }, [myProfile, filters, searchTerm, blockedIds, loading])
+  }, [
+    myProfile,
+    filters,
+    searchTerm,
+    blockedIds,
+    loading,
+    selectedItems,
+    selectedItemsToDonate
+  ]);
 
   useEffect(() => {
     const getData = setTimeout(() => loadData(), 300) 
@@ -225,7 +305,7 @@ function SearchPage() {
           {/* FILTRO DE ITENS */}
           {myProfile?.is_donor === false && (
             <div className="items-filter-section">
-              <label>Itens Necessários</label>
+              <label>Itens a receber (filtro por doador)</label>
               <div className="item-inner-search">
                 <input 
                   type="text" 
@@ -263,6 +343,96 @@ function SearchPage() {
                     </div>
                   </div>
                 ))}             
+              </div>
+            </div>
+          )}
+
+          {myProfile?.is_donor === true && (
+            <div className="items-filter-section">
+              <label>Itens a doar (filtro por Instituição Arrecadadora)</label>
+              <div className="item-inner-search">
+                <input 
+                  type="text" 
+                  placeholder="Procurar item..." 
+                  value={itemSearchDonate}
+                  onChange={(e) => setItemSearchDonate(e.target.value)}
+                />
+              </div>
+              {/* 🔥 BOTÃO EXTRA */}
+              <div className="use-my-items">
+                <input
+                  type="checkbox"
+                  checked={useMyItems}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setUseMyItems(checked);
+
+                    if (checked && myProfile?.food_available) {
+                      const myItems = myProfile.food_available.map(f => f.item.toLowerCase());
+
+                      const mappedItems = new Set();
+
+                      myProfile.food_available.forEach(f => {
+                        const item = f.item.toLowerCase();
+
+                        let matchedCategory = null;
+
+                        Object.entries(categoryMapping).forEach(([category, items]) => {
+                          if (items.includes(item)) {
+                            matchedCategory = category;
+                          }
+                        });
+
+                        const mappedItems = new Set();
+
+                        myProfile.food_available.forEach(f => {
+                          const item = f.item.toLowerCase();
+
+                          // 🔥 se for categoria explícita
+                          if (categoryMapping[item]) {
+                            mappedItems.add(item);
+
+                            categoryMapping[item].forEach(i => {
+                              mappedItems.add(i);
+                            });
+
+                          } else {
+                            // 🔥 item normal → só ele
+                            mappedItems.add(item);
+                          }
+                        });
+
+                        setSelectedItemsToDonate(Array.from(mappedItems));
+                      });
+                    }
+                  }}
+                />
+                <span>Ativar no filtro abaixo sua lista de itens</span>
+              </div>
+
+              <div className="items-scroll-container">
+                <div 
+                  className={`item-row ${selectedItemsToDonate.includes("todos") ? "selected" : ""}`}
+                  onClick={() => handleDonateItemToggle("todos")}
+                >
+                  <input type="checkbox" checked={selectedItemsToDonate.includes("todos")} readOnly />
+                  <span>Todos</span>
+                </div>
+
+                {filteredMarketItemsDonate.map(item => (
+                  <div
+                    key={item}
+                    className={`item-row ${selectedItemsToDonate.includes(item) ? "selected" : ""}`}
+                    onClick={() => handleDonateItemToggle(item)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedItemsToDonate.includes(item)}
+                      readOnly
+                    />
+                    <span>{item}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

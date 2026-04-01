@@ -1,7 +1,8 @@
 .config-container {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
+  width: 30%;       
+  max-width: 1000px; 
+  margin: 40px auto; 
+  padding: 30px;
   font-family: Arial, sans-serif;
 }
 
@@ -20,6 +21,7 @@
 .config-section h2 {
   margin-bottom: 15px;
   color: #58af9b;
+  margin-bottom: 20px
 }
 
 .config-item {
@@ -32,6 +34,8 @@
 .config-item label {
   font-size: 14px;
   max-width: 70%;
+  font-size: 16px;
+  gap: 10px
 }
 
 .config-button {
@@ -53,4 +57,10 @@
 
 .config-button.danger:hover {
   background: #c0392b;
+}
+
+.config-item input[type="checkbox"] {
+  transform: scale(1.4); 
+  margin-right: 10px;    
+  cursor: pointer;
 }

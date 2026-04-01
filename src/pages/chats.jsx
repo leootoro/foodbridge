@@ -96,31 +96,27 @@ function Chats() {
 
     <div className="chat-container">
 
-      <aside className="sidebar_chat">
-        <h2 className="logo">FoodBridge</h2>
+      <aside className="sidebar">
+          <h2 className="logo">FoodBridge</h2>
 
-        <nav>
-          <ul>
-            <li>
-              <button onClick={() => navigate("/profile")}>
-                Perfil
-              </button>
-            </li>
-            <li className="active">
-              <button onClick={() => navigate("/chats")}>
-                Conversas
-              </button>
-            </li>
-            <li>
-              <button onClick={() => navigate("/map")}>
-                Mapa
-              </button>
-            </li>
-            <li>Configurações</li>
-          </ul>
-        </nav>
-      </aside>
-
+          <nav>
+            <ul>
+              <li onclick = {() => navigate("/profile")}>Perfil </li>
+               <li className="button_conversas" onClick={() => navigate("/search")}>
+                 Procurar 🔎
+              </li>
+              <li className="active" onClick={() => navigate("/chats")}>
+                  Conversas
+              </li>
+              <li className="button_map" onClick={() => navigate("/map")}>
+                  Mapa
+              </li>
+              <li className="button_config" onClick={() => navigate("/config")}>
+                  Configurações
+              </li>
+            </ul>
+          </nav>
+        </aside>
       {/* 🔥 CONTEÚDO DO LADO DIREITO */}
       <div className="chat-content">
 

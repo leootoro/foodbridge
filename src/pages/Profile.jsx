@@ -5,7 +5,38 @@ import { get_Profile, updateProfile } from "../services/profileService";
 import { getUserPosts, getMediaUrl, get_profile_photo_Url, deletePost, updatePostText } from "../services/mediaService";
 import { getCurrentUser } from "../services/authService";
 import { getOrCreateChat } from "../services/chatService"
+import BackButton from "../components/BackButton"
+import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
+function getDisplayLocation(profile) {
+  if (profile.show_exact_location) {
+    return [profile.lat, profile.lng];
+  }
+  // Cria um deslocamento pseudo-aleatório fixo baseado no ID
+  const seed = profile.id.charCodeAt(0); 
+  const offset = 0.0015; // Aproximadamente 150-200 metros
+  const randomLat = profile.lat + ((seed % 10) - 5) * (offset / 10);
+  const randomLng = profile.lng + ((seed % 7) - 3) * (offset / 10);
+
+  return [randomLat, randomLng];
+}
+
+function RecenterMap({ position }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (position) {
+      const offsetLatitude = position[0] - 0.010; 
+      const newCenter = [offsetLatitude, position[1]];
+
+      map.setView(newCenter, map.getZoom());
+      map.invalidateSize(); 
+    }
+  }, [position, map]);
+
+  return null;
+}
 
 function show_location(profile) {
 
@@ -30,6 +61,15 @@ function Profile() {
   // Adicione um novo estado para o modo de edição
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState("");
+  const position = profile?.lat && profile?.lng ? getDisplayLocation(profile) : null;
+
+  const handleMapClick = () => {
+    if (profile?.lat && profile?.lng) {
+      // Gera a URL de busca do Google Maps com as coordenadas
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${profile.lat},${profile.lng}`;
+      window.open(googleMapsUrl, '_blank'); // Abre em uma nova aba
+    }
+  };
 
   // Função para Deletar
   const handleDelete = async (post) => {
@@ -281,7 +321,7 @@ function Profile() {
 
               <div className="restriction-title">
                 Restrição de alimentos
-                <span className="help">?</span>
+                <span className="help" title = 'Alimentos não recebidos pela instituição'>?</span>
               </div>
 
               <div className="restriction-tags">
@@ -374,11 +414,48 @@ function Profile() {
 
           <div className="card map-card">
             <h3>📍 Localização</h3>
+            <p style={{ fontSize: '14px', marginBottom: '10px', color: '#666' }}>
+              {show_location(profile)}
+            </p>
 
-            <iframe
-              title="map"
-              src="https://maps.google.com/maps?q=sao%20paulo&t=&z=13&ie=UTF8&iwloc=&output=embed"
-            ></iframe>
+            {position ? (
+              <div style={{ height: "300px", width: "100%", borderRadius: "12px", overflow: "hidden", position: "relative"}}>
+                <button  onClick={handleMapClick} className  = "button_google_maps" title="Clique para abrir no Google Maps">➣</button>
+                <MapContainer
+                  key={profile.id} 
+                  center={position}
+                  zoom={15}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  
+                  <RecenterMap position={position} />
+
+                  {profile.show_exact_location ? (
+                    /* PINO EXATO */
+                    <Marker position={position} />
+                  ) : (
+                    /* ÁREA AZUL (Localização aproximada) */
+                    <>
+                      <Circle
+                        center={position}
+                        radius={150} // Raio em metros
+                        pathOptions={{
+                          color: "#3498db",
+                          fillColor: "#3498db",
+                          fillOpacity: 0.3,
+                          weight: 1
+                        }}
+                      />
+                      {/* Opcional: Um marcador diferente ou nenhum marcador no centro da área */}
+                    </>
+                  )}
+                </MapContainer>
+              </div>
+            ) : (
+              <div className="map-placeholder">Localização não disponível</div>
+            )}
+          
           </div>
 
         </section>

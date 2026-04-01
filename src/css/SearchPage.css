@@ -225,28 +225,34 @@
     max-height: 250px; /* Limita altura em mobile */
   }
 }
-/* Garante que o container da lista permita ver o que sai dele lateralmente */
-.items-scroll-container {
-  max-height: 200px;
-  /* overflow: visible */
-  overflow-y: auto;
-  overflow-x: visible; /*IMPORTANTE: permite que o tooltip saia para os lados*/
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  position: relative;
-}
 
 /* Linha do item ajustada para alinhar ícone à direita */
 .item-row {
   display: flex;
   align-items: center;
-  justify-content:flex-start; /* Separa checkbox do ícone info */
-  padding: 8px 10px;
-  border-bottom: 1px solid #f9f9f9;
+  padding: 10px 12px;
   font-size: 14px;
+  transition: all 0.15s;
+  border-bottom: 1px solid #f5f5f5;
 }
 
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-row:hover {
+  background: #f4fbf8;
+}
+
+.item-row.selected {
+  background: #e8f6f2;
+  font-weight: 500;
+}
+
+.item-row input {
+  margin-right: 8px;
+  cursor: pointer;
+}
 /* Parte clicável que marca o checkbox */
 .item-main-clickable {
   display: flex;
@@ -256,24 +262,6 @@
   cursor: pointer;
 }
 
-.item-row:hover {
-  background: #f0f7f5;
-}
-
-.item-row.selected {
-  background: #eef9f6;
-  font-weight: 500;
-}
-
-.item-row {
-  display: flex;
-  align-items: center;
-  /* Removemos o justify-content: space-between daqui */
-  padding: 8px 10px;
-  border-bottom: 1px solid #f9f9f9;
-  font-size: 14px;
-  position: relative;
-}
 /* Container do ícone */
 .info-tooltip {
   margin-left: auto;
@@ -373,4 +361,69 @@
   overflow-x: hidden; /* Evita barra horizontal */
   max-height: 250px;
   padding-bottom: 40px; /* Espaço extra no final para o último tooltip não sumir */
+}
+
+.items-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* 🔥 espaço entre título, busca, botão e lista */
+  margin-top: 15px;
+}
+.items-filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* 🔥 espaço entre título, busca, botão e lista */
+  margin-top: 15px;
+}
+
+.item-inner-search input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  font-size: 14px;
+  background: #fafafa;
+  transition: all 0.2s;
+}
+
+.item-inner-search input:focus {
+  border-color: #58af9b;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(88, 175, 155, 0.15);
+}
+
+.use-my-items {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 10px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.use-my-items input {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+.items-scroll-container {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  padding: 5px 0;
+}
+
+.items-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.items-scroll-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.items-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }

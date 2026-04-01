@@ -8,9 +8,13 @@ export const categoryMapping = {
 
 // 2. A lista expandida para o Select do Doador
 export const expandedMarketItems = [
+  "frutas",
+  "hortifruti",
+  "congelados",
+  
   "açúcar", "achocolatado", "água mineral", "água sanitária", "água tônica", "aguardente",
   "álcool em gel", "algodão", "amaciante", "arroz", "aveia", "azeite de oliva", 
-  "biscoito", "bisnaguinha", "bolacha", "bolo", "café", "carnes em geral", 
+  "biscoito", "bisnaguinha", "bolacha", "bolo", "café", "carnes", 
   "cereal matinal", "cerveja", "chá", "condicionador", "creme de leite", "creme dental",
   "desinfetante", "desodorante", "detergente", "escova de dentes", "espuma de barbear",
   "farinha de mandioca", "farinha de milho", "farinha de trigo", "feijão", "fermento",
@@ -20,9 +24,13 @@ export const expandedMarketItems = [
   "pão de forma", "pão francês", "papel higiênico", "peito de peru", "presunto", "queijo",
   "refrigerante", "requeijão", "sabão em pó", "sabão líquido", "sabonete", "sal", "salame",
   "shampoo", "suco concentrado", "suco de caixa", "torrada", "vinagre", "vinho",
-  // Espalha os itens das categorias aqui para a lista ficar completa
+
+  // 🔥 itens das categorias
   ...categoryMapping.frutas,
   ...categoryMapping.hortifruti,
   ...categoryMapping.congelados,
-  "Outro" // Deixe sempre por último
-].sort(); // O .sort() já deixa tudo em ordem alfabética automaticamente
+
+  "Outro"
+]
+.filter((item, index, self) => self.indexOf(item) === index) // 🔥 remove duplicados
+.sort((a, b) => a.localeCompare(b, 'pt-BR'));

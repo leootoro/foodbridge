@@ -16,7 +16,8 @@ function EditProfile() {
   const [zoom, setZoom] = useState(1)
   const [selectedFile, setSelectedFile] = useState(null)
   const [foodList, setFoodList] = useState([{ item: "", customItem: "", quantity: 1, unit: "un" }]);
-  
+  const [foodSearch, setFoodSearch] = useState("");
+
   // Adiciona uma nova linha em branco no formulário de alimentos disponíveis.
   const handleAddFoodRow = () => {
     setFoodList([...foodList, { item: "", customItem: "", quantity: 1, unit: "un" }]);
@@ -55,7 +56,7 @@ function EditProfile() {
     address:"",
     address_number:"",
     address_complement:"",
-    is_donor: "",
+    is_donor: false,
     immediate_availability: false,
     local_pickup: true,
     food_available: ""
@@ -93,7 +94,7 @@ function EditProfile() {
           address: profile.address || "",
           address_number: profile.address_number || "",
           address_complement: profile.address_complement|| "",
-          is_donor: profile.is_donor || "",
+          is_donor: profile.is_donor || false,
           immediate_availability: profile.immediate_availability|| false,
           local_pickup: profile.local_pickup || true,
           food_available: profile.food_available || ""
@@ -141,7 +142,14 @@ function EditProfile() {
       // 2. Prepara o objeto final
       const finalFormData = {
         ...form,
-        food_available: cleanedFoodList 
+
+        accept_donation: !!form.accept_donation,
+        pet_donation: !!form.pet_donation,
+        immediate_availability: !!form.immediate_availability,
+        local_pickup: !!form.local_pickup,
+        is_donor: !!form.is_donor,
+
+        food_available: cleanedFoodList
       };
 
       await updateProfile(user.id, finalFormData);
@@ -275,41 +283,10 @@ function EditProfile() {
           <input name="address_complement" value={form.address_complement} onChange={handleChange} placeholder="Complemento" style={inputStyle} />
         </div>
 
-        {/* RECEBEDOR */}
-        {form?.is_donor === false && (
-          <>
-            <div style={switchContainer}>
-              <span>Aceitando doação</span>
-              <input
-                type="checkbox"
-                checked={form.accept_donation}
-                onChange={() => handleSwitch("accept_donation")}
-              />
-            </div>
-
-            <div style={switchContainer}>
-              <span>Aceita alimento para pet</span>
-              <input
-                type="checkbox"
-                checked={form.pet_donation}
-                onChange={() => handleSwitch("pet_donation")}
-              />
-            </div>
-
-            <textarea
-              name="food_restrictions"
-              value={form.food_restrictions}
-              onChange={handleChange}
-              placeholder="Restrições alimentares"
-              style={inputStyle}
-            />
-          </>
-        )}
-
         {/* DOADOR */}
         {form?.is_donor === true && (
           <>
-            <div style={switchContainer}>
+            <div style={switchContainer1}>
               <span>Retirada no local</span>
               <input
                 type="checkbox"
@@ -318,7 +295,7 @@ function EditProfile() {
               />
             </div>
 
-            <div style={switchContainer}>
+            <div style={switchContainer2}>
               <span>Disponibilidade imediata</span>
               <input
                 type="checkbox"
@@ -332,74 +309,206 @@ function EditProfile() {
       </div>
 
       {/* DIREITA */}
-      <div style={{ flex: 1, minWidth: "320px" }}>
-        {form?.is_donor === true && (
-          <div>
 
-            <label style={{ fontWeight: "bold", marginBottom: "10px", display: "block" }}>
+      <div style={{ flex: 1, minWidth: "320px" }}>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* RECEBEDOR */}
+          {form?.is_donor == false  && (
+            <>
+              <div style={switchContainer1}>
+                <span>Aceitando doação</span>
+                <input
+                  type="checkbox"
+                  checked={form.accept_donation}
+                  onChange={() => handleSwitch("accept_donation")}
+                />
+              </div>
+
+              <div style={switchContainer2}>
+                <span>Aceita alimento para pet</span>
+                <input
+                  type="checkbox"
+                  checked={form.pet_donation}
+                  onChange={() => handleSwitch("pet_donation")}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <label style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#64748b"
+                }}>
+                  Restrições de certos alimentos
+                </label>
+
+                <textarea
+                  name="food_restrictions"
+                  value={form.food_restrictions}
+                  onChange={handleChange}
+                  placeholder="Ex: congelados, carne, bebidas"
+                  style={inputStyle}
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {form?.is_donor === true && (
+          <div style={{ width: "100%" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "12px", display: "block", color: "#334155" }}>
               Alimentos Disponíveis
             </label>
 
-            <div
-              style={{
-                maxHeight: "400px",
-                overflowY: "auto",
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                padding: "10px"
-              }}
-            >
+            <div className="food-container">
               {foodList.map((row, index) => (
-                <div key={index} style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-
-                  <select 
-                    value={row.item} 
-                    onChange={(e) => handleFoodChange(index, "item", e.target.value)}
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: 'white' }}
-                    translate="no"
-                  >
-                    <option value="">Selecione...</option>
+                <div key={index} style={{ marginBottom: "15px" }}>
+                  <div className="food-row">
                     
-                    {expandedMarketItems.map(item => {
-                      // 🔍 Verifica se este item já foi escolhido em OUTRA linha
-                      const isAlreadySelected = foodList.some((food, i) => food.item === item && i !== index);
+                    {/* SELETOR CUSTOMIZADO COM BUSCA */}
+                    <div className="custom-select-wrapper">
+                      <div
+                        className="select-display"
+                        onClick={() => {
+                          const newList = [...foodList];
+                          newList[index].open = !newList[index].open;
+                          setFoodList(newList);
+                        }}
+                      >
+                        {row.item || "Selecione..."}
+                      </div>
 
-                      // Se já foi selecionado em outra linha e não é "Outro", nós o desabilitamos
-                      return (
-                        <option 
-                          key={item} 
-                          value={item} 
-                          disabled={isAlreadySelected && item !== "Outro"}
-                          style={isAlreadySelected && item !== "Outro" ? { color: '#ccc' } : {}}
-                        >
-                          {item} {isAlreadySelected && item !== "Outro" ? "(Já selecionado)" : ""}
-                        </option>
-                      );
-                    })}
-                  </select>
+                      {row.open && (
+                        <div className="select-dropdown">
+                          <input
+                            type="text"
+                            placeholder="Pesquisar..."
+                            autoFocus
+                            value={row.search || ""}
+                            onChange={(e) => {
+                              const newList = [...foodList];
+                              newList[index].search = e.target.value;
+                              setFoodList(newList);
+                            }}
+                            className="select-search"
+                            onClick={(e) => e.stopPropagation()} 
+                          />
+                          
+                          <div className="options-list" style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                            {expandedMarketItems
+                              .filter(item => 
+                                item.toLowerCase().includes((row.search || "").toLowerCase())
+                              )
+                              .map(item => {
+                                const isAlreadySelected = foodList.some(
+                                  (food, i) => food.item === item && i !== index
+                                );
 
-                  <input
-                    type="number"
-                    value={row.quantity}
-                    onChange={(e) => handleFoodChange(index, "quantity", e.target.value)}
-                    style={{ width: "70px" }}
-                  />
+                                return (
+                                  <div
+                                    key={item}
+                                    className={`select-option ${isAlreadySelected ? "disabled" : ""}`}
+                                    onClick={() => {
+                                      if (isAlreadySelected) return;
+                                      const newList = [...foodList];
+                                      newList[index].item = item;
+                                      newList[index].open = false;
+                                      newList[index].search = "";
+                                      newList[index].customItem = ""; // Limpa se mudar de Outro para item da lista
+                                      setFoodList(newList);
+                                    }}
+                                  >
+                                    {item} {isAlreadySelected ? "(Já selecionado)" : ""}
+                                  </div>
+                                );
+                              })}
 
-                  <select
-                    value={row.unit}
-                    onChange={(e) => handleFoodChange(index, "unit", e.target.value)}
-                    style={{ width: "80px" }}
-                  >
-                    <option value="un">un</option>
-                    <option value="kg">kg</option>
-                    <option value="g">g</option>
-                    <option value="L">L</option>
-                  </select>
+                            <div
+                              className="select-option outro"
+                              style={{ color: '#3897f0', fontWeight: 'bold', borderTop: '1px solid #eee' }}
+                              onClick={() => {
+                                const newList = [...foodList];
+                                newList[index].item = "Outro";
+                                newList[index].open = false;
+                                newList[index].search = "";
+                                setFoodList(newList);
+                              }}
+                            >
+                              + Outro (Personalizado)
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                  {foodList.length > 1 && (
-                    <button onClick={() => handleRemoveFoodRow(index)}>
+                    {/* QUANTIDADE */}
+                    <input
+                      type="number"
+                      min="1"
+                      value={row.quantity}
+                      onChange={(e) => handleFoodChange(index, "quantity", e.target.value)}
+                      style={{ ...inputStyle, width: "65px", textAlign: "center", padding: "10px 5px" }}
+                    />
+
+                    {/* UNIDADE */}
+                    <select
+                      value={row.unit}
+                      onChange={(e) => handleFoodChange(index, "unit", e.target.value)}
+                      style={{ ...inputStyle, width: "75px", padding: "10px 5px", backgroundColor: "white" }}
+                    >
+                      <option value="un">un</option>
+                      <option value="kg">kg</option>
+                      <option value="g">g</option>
+                      <option value="L">L</option>
+                    </select>
+
+                    {/* REMOVER */}
+                    <button 
+                      type="button"
+                      className="btn-remove-food-circle"
+                      onClick={() => handleRemoveFoodRow(index)}
+                    >
                       ✕
                     </button>
+                  </div>
+
+                  {/* CAMPO EXTRA PARA "OUTRO" COM LÓGICA DE ENTER */}
+                  {row.item === "Outro" && (
+                    <div style={{ position: 'relative', marginTop: '-5px', marginBottom: '10px' }}>
+                      <input
+                        type="text"
+                        placeholder="Digite o nome e aperte Enter..."
+                        value={row.customItem || ""}
+                        onChange={(e) => {
+                          const newList = [...foodList];
+                          newList[index].customItem = e.target.value;
+                          setFoodList(newList);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && row.customItem?.trim()) {
+                            e.preventDefault();
+                            const newList = [...foodList];
+                            // Passa o valor do customItem para o item principal
+                            newList[index].item = row.customItem.trim();
+                            newList[index].customItem = ""; // Limpa o campo temporário
+                            setFoodList(newList);
+                          }
+                        }}
+                        autoFocus
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          borderRadius: "8px",
+                          border: "1px solid #3897f0",
+                          backgroundColor: "#f0f7ff",
+                          fontSize: "14px"
+                        }}
+                      />
+                      <small style={{ color: '#3897f0', fontSize: '11px', marginLeft: '5px' }}>
+                        Aperte Enter para confirmar o nome.
+                      </small>
+                    </div>
                   )}
                 </div>
               ))}
@@ -408,20 +517,10 @@ function EditProfile() {
             <button 
               type="button" 
               onClick={handleAddFoodRow}
-              style={{ 
-                width: '100%', 
-                padding: '12px', 
-                background: '#58af9b', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '8px', 
-                cursor: foodList[foodList.length - 1].item === "" ? 'not-allowed' : 'pointer', 
-                fontWeight: 'bold' 
-              }}
+              className="btn-add-food"
             >
               + Adicionar outro item
             </button>
-
           </div>
         )}
       </div>
@@ -465,7 +564,7 @@ const inputStyle = {
   outline: "none"
 };
 
-const switchContainer = {
+const switchContainer1 = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
@@ -473,7 +572,19 @@ const switchContainer = {
   backgroundColor: "#f8fafc",
   borderRadius: "8px",
   fontSize: "14px",
-  color: "#64748b"
+  color: "#64748b",
+};
+
+const switchContainer2 = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "12px",
+  backgroundColor: "#f8fafc",
+  borderRadius: "8px",
+  fontSize: "14px",
+  color: "#64748b",
+  marginBottom:"20px"
 };
 
 const buttonStyle = {

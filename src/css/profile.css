@@ -49,7 +49,9 @@
   white-space: nowrap;
   height: 45px; /* Aumentado para caber o texto confortavelmente */
   width: 100%;
-  font-size: 18px;
+  font-size: 17
+  
+  px;
 }
 
 .sidebar li:hover{
@@ -190,7 +192,7 @@
   gap: 10px;
   min-height: auto; /* Permite que o card encolha se houver pouco conteúdo */
   max-height: 400px; /* Define um limite para não ficar gigante */
-  font-size: 18px;
+  font-size: 16px;
 
 }
 
@@ -305,7 +307,7 @@
   font-size: 16px; /* Texto maior para melhor leitura */
   color: #333;
   font-weight: 500;
-  font-size: 18px
+  font-size: 16px
 
 }
 .status-text {
@@ -581,4 +583,54 @@
   margin-right: 5px;
   padding: 5px 15px;
   cursor: pointer;
+}
+
+.button_google_maps {
+  position: absolute;
+  top: 10px;    /* Distância do topo */
+  right: 10px;  /* Distância da direita */
+  z-index: 1001; /* Maior que o z-index padrão do Leaflet (1000) */
+  
+  background-color: white;
+  border: none;
+  border-radius: 8px;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  color: #333;
+}
+
+.button_google_maps:hover {
+  background-color: #f8f8f8;
+}
+
+.food-container {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.food-search {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  font-size: 14px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.food-search:focus {
+  border-color: #58af9b;
+  box-shadow: 0 0 0 2px rgba(88, 175, 155, 0.2);
+  outline: none;
 }
