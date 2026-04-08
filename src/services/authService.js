@@ -14,23 +14,24 @@ export async function loginComGoogle() {
 }
 
 // cadastro
-export async function signup(email, password, name) {
+export async function signup(email, password, name, userType) {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name }
+        data: { name },
+        userType: {userType}
       }
     });
 
-    if (error){
-      if (error.message.includes("duplicate key")) {
-        throw new Error("Esse nome já está em uso")
+    if (error) {
+      // Verifica se o erro do Supabase é de duplicidade (geralmente contém a palavra 'unique')
+      if (error.message.includes('unique constraint') || error.message.includes('already exists')) {
+        throw new Error('Este nome de usuário já está sendo utilizado. Por favor, escolha outro.');
       }
       throw error;
     }
-
     return { success: true, user: data.user };
 
   } catch (error) {
@@ -67,4 +68,23 @@ export async function getCurrentUser() {
 // logout (recomendado adicionar)
 export async function logout() {
   await supabase.auth.signOut();
+}
+
+export async function checkNameExists(name) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('name')
+      .ilike('name', name)
+      .maybeSingle(); // Retorna null se não achar nada em vez de dar erro
+
+    if (error) throw error;
+    
+    // Se data não for nulo, significa que o nome já existe
+    return data !== null; 
+    
+  } catch (error) {
+    console.error("Erro ao verificar nome:", error.message);
+    return false;
+  }
 }

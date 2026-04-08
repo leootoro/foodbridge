@@ -89,3 +89,111 @@ html, body {
 .leaflet-popup-pane {
   z-index: 700;
 }
+.map-page .items-filter-section {
+  display: flex;
+  gap: 10px; /* 🔥 espaço entre título, busca, botão e lista */
+  margin-top: 15px;
+  color:#ffffff;
+}
+
+.item-inner-search input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  font-size: 14px;
+  background: #fafafa;
+  transition: all 0.2s;
+}
+
+.item-inner-search input:focus {
+  border-color: #58af9b;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(88, 175, 155, 0.15);
+}
+
+.map-page .use-my-items {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 10px 0;
+  font-size: 13px;
+  color: #ffffff;
+}
+.map-page .use-my-items span {
+  color: #ffffff;
+}
+
+.map-page .use-my-items input {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+.items-scroll-container {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  padding: 5px 0;
+}
+
+.items-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.items-scroll-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.items-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Linha do item ajustada para alinhar ícone à direita */
+.item-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.15s;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.map-page .item-row span {
+  color: #453f3f;
+}
+
+.item-row:hover {
+  background: #f4fbf8;
+}
+
+.item-row.selected {
+  background: #e8f6f2;
+  font-weight: 500;
+}
+
+.item-row input {
+  margin-right: 8px;
+  cursor: pointer;
+}
+/* Parte clicável que marca o checkbox */
+.item-main-clickable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1; /* Ocupa todo o espaço da esquerda */
+  cursor: pointer;
+}
+
+/* Ajuste no container para ele não cortar o que expandir */
+.item-wrapper-group {
+  position: relative;
+  border-bottom: 1px solid #f0f0f0;
+}
+

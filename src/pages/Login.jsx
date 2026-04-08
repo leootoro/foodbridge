@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Importante para a navegação
-import { login, signup, loginComGoogle } from "../services/authService";
+import { login, signup, loginComGoogle, checkNameExists } from "../services/authService";
 import "../css/Login.css"
 
 function Login() {
@@ -12,6 +12,7 @@ function Login() {
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [userType, setUserType] = useState(""); // Novo estado para o tipo de usuário
 
   // Estados para Login
   const [loginEmail, setLoginEmail] = useState("");
@@ -19,7 +20,21 @@ function Login() {
 
   async function handleSignup(e) {
     e.preventDefault();
-    const result = await signup(signupEmail, signupPassword, signupName);
+
+    // 1. Validação do Tipo de Usuário (que fizemos antes)
+    if (!userType) {
+      alert("Por favor, selecione se você é um Doador ou uma Instituição.");
+      return;
+    }
+
+    // 2. NOVA VERIFICAÇÃO: O nome já existe?
+    const nameExists = await checkNameExists(signupName);
+    
+    if (nameExists) {
+      alert("Este nome já está em uso. Por favor, escolha outro nome.");
+      return; // Para a execução aqui e não deixa cadastrar!
+    }
+    const result = await signup(signupEmail, signupPassword, signupName, userType);
 
     if (result.success) {
       // Redireciona para a rota /profile definida no seu App.jsx
@@ -80,6 +95,31 @@ function Login() {
           <p className="description description-second">ou use o seu email para se cadastrar:</p>
           
           <form className="login-form" onSubmit={handleSignup}>
+
+            {/* SELEÇÃO DE TIPO DE USUÁRIO */}
+            <div className="user-type-container" style={{ display: 'flex', gap: '20px', marginBottom: '15px', justifyContent: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <input 
+                  type="radio" 
+                  name="userType" 
+                  value="doador" 
+                  checked={userType === "doador"}
+                  onChange={(e) => setUserType(e.target.value)}
+                />
+                Doador
+              </label>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <input 
+                  type="radio" 
+                  name="userType" 
+                  value="instituicao" 
+                  checked={userType === "instituicao"}
+                  onChange={(e) => setUserType(e.target.value)}
+                />
+                Instituição
+              </label>
+            </div>
             <label className="login-label-input">
               <i className="far fa-user icon-modify"></i>
               <input 

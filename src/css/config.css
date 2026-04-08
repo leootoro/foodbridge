@@ -42,25 +42,44 @@
   padding: 10px 15px;
   border-radius: 8px;
   border: none;
-  background: #58af9b;
+  background: #6b6f6e;
   color: white;
   cursor: pointer;
 }
 
 .config-button:hover {
-  background: #4a9e8b;
+  background: #000000;
+  transform: scale(1.05);
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .config-button.danger {
   background: #e74c3c;
+
 }
 
 .config-button.danger:hover {
   background: #c0392b;
+  transform: scale(1.05);
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .config-item input[type="checkbox"] {
   transform: scale(1.4); 
   margin-right: 10px;    
   cursor: pointer;
+}
+.config-button .logout-btn{
+
+   flex: 1,;
+   background: #7a7777;
+   color: #ffffff;
+}
+
+.config-button.logout-btn:hover {
+  transform: scale(1.05);
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }

@@ -8,6 +8,7 @@ import {
 } from "../services/chatService"
 import "../css/ChatPage.css"
 import BackButton from "../components/BackButton"
+import { updateProfile } from "../services/profileService";
 
 function Chat() {
 
@@ -20,6 +21,12 @@ function Chat() {
   const [text, setText] = useState("")
   const [loading, setLoading] = useState(true)
 
+  const isOnline = (lastSeen) => {
+    if (!lastSeen) return false;
+
+    const diff = Date.now() - new Date(lastSeen).getTime();
+    return diff < 2 * 60 * 1000; // 2 minutos
+  };
   // 🧠 FORMATA DATA (Hoje / Ontem / data)
   function formatDateLabel(dateString) {
     const date = new Date(dateString)
@@ -38,17 +45,28 @@ function Chat() {
   }
 
   useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      updateProfile(user.id, {
+        last_seen: new Date().toISOString()
+      });
+    }, 60000); // 1min
+
+    return () => clearInterval(interval);
+  }, [user]);
+
+  useEffect(() => {
     async function loadChat() {
       try {
         setLoading(true)
 
         const { data } = await supabase.auth.getUser()
         const currentUser = data.user
-
+        
         if (!currentUser) return
 
         setUser(currentUser)
-
         const chat = await getChatById(chatId)
 
         if (!chat) return
@@ -140,12 +158,12 @@ function Chat() {
         <div className="status">
           <span
             className={`dot ${
-              otherUser.is_online ? "online" : "offline"
+              isOnline(otherUser.last_seen) ? "online" : "offline"
             }`}
           ></span>
 
           <span>
-            {otherUser.is_online ? "Online" : "Offline"}
+            {isOnline(otherUser.last_seen) ? "Online" : "Offline"}
           </span>
         </div>
 

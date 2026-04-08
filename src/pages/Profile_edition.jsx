@@ -17,6 +17,11 @@ function EditProfile() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [foodList, setFoodList] = useState([{ item: "", customItem: "", quantity: 1, unit: "un" }]);
   const [foodSearch, setFoodSearch] = useState("");
+  const estadosBR = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", 
+  "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", 
+  "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
 
   // Adiciona uma nova linha em branco no formulário de alimentos disponíveis.
   const handleAddFoodRow = () => {
@@ -59,13 +64,14 @@ function EditProfile() {
     is_donor: false,
     immediate_availability: false,
     local_pickup: true,
-    food_available: ""
+    food_available: "",
+    physical_address: ""
   })
 
   // 🔄 Carregar dados do banco
   useEffect(() => {
     async function loadData() {
-
+      window.scrollTo(0, 0);
       const { data } = await supabase.auth.getUser()
       const currentUser = data.user
 
@@ -97,7 +103,8 @@ function EditProfile() {
           is_donor: profile.is_donor || false,
           immediate_availability: profile.immediate_availability|| false,
           local_pickup: profile.local_pickup || true,
-          food_available: profile.food_available || ""
+          food_available: profile.food_available || "",
+          physical_address: profile.physical_address ?? false,
         })
       }
 
@@ -148,9 +155,12 @@ function EditProfile() {
         immediate_availability: !!form.immediate_availability,
         local_pickup: !!form.local_pickup,
         is_donor: !!form.is_donor,
-
+        physical_address: !!form.physical_address,
         food_available: cleanedFoodList
       };
+      if (finalFormData.physical_address == false){
+        finalFormData.address = 'Online'
+      }
 
       await updateProfile(user.id, finalFormData);
       await save_lat_and_long(user.id, finalFormData);
@@ -259,7 +269,16 @@ function EditProfile() {
           gap: "15px"
         }}
       >
-
+        {/* 4. TROCADO O RÁDIO POR UM SWITCH COMPLETO */}
+        <div style={switchContainer1}>
+          <span>Possui endereço físico?</span>
+          <input
+            type="checkbox"
+            checked={!!form.physical_address}
+            onChange={() => handleSwitch("physical_address")}
+          />
+        </div>
+        
         <input name="name" value={form.name} onChange={handleChange} placeholder="Nome" style={inputStyle} />
 
         <textarea
@@ -271,17 +290,34 @@ function EditProfile() {
         />
 
         <div style={{ display: "flex", gap: "10px" }}>
-          <input name="state" value={form.state} onChange={handleChange} placeholder="Estado" style={inputStyle} />
+          {/* Estado (Select) */}
+          <select 
+            name="state" 
+            value={form.state} 
+            onChange={handleChange} 
+            style={{ ...inputStyle, width: "35%", backgroundColor: "white" }}
+          >
+            <option value="" disabled>UF</option>
+            {estadosBR.map((sigla) => (
+              <option key={sigla} value={sigla}>
+                {sigla}
+              </option>
+            ))}
+          </select>
           <input name="city" value={form.city} onChange={handleChange} placeholder="Cidade" style={inputStyle} />
         </div>
 
-        <input name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder="Bairro" style={inputStyle} />
-        <input name="address" value={form.address} onChange={handleChange} placeholder="Endereço" style={inputStyle} />
+        {form?.physical_address === true && (
+          <>
+            <input name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder="Bairro" style={inputStyle} />
+            <input name="address" value={form.address} onChange={handleChange} placeholder="Logradouro" style={inputStyle} />
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <input name="address_number" value={form.address_number} onChange={handleChange} placeholder="Nº" style={inputStyle} />
-          <input name="address_complement" value={form.address_complement} onChange={handleChange} placeholder="Complemento" style={inputStyle} />
-        </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <input name="address_number" value={form.address_number} onChange={handleChange} placeholder="Nº" style={inputStyle} />
+              <input name="address_complement" value={form.address_complement} onChange={handleChange} placeholder="Complemento" style={inputStyle} />
+            </div>
+          </>
+        )}
 
         {/* DOADOR */}
         {form?.is_donor === true && (

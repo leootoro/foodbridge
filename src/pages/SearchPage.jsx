@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { FiSearch, FiInfo } from "react-icons/fi"
+import { FiSearch } from "react-icons/fi"
 import { FaStar } from "react-icons/fa" // Import para a estrela
 import "../css/SearchPage.css"
 import { supabase } from "../lib/supabase"
@@ -8,9 +8,8 @@ import { getCurrentUser } from "../services/authService"
 import { getBlockedIds } from "../services/blockService" 
 import BackButton from "../components/BackButton"
 import defaultAvatar from "/default_user.png"
-import { expandedMarketItems } from '../lib/itemCategories';
 import { categoryMapping } from '../lib/itemCategories';
-
+import ItemFilter from "../components/itemFilter"
 
 function SearchPage() {
   const navigate = useNavigate()
@@ -26,8 +25,7 @@ function SearchPage() {
   const [useMyItems, setUseMyItems] = useState(false);
   const [itemSearchDonate, setItemSearchDonate] = useState("");
   
-  const marketItems = expandedMarketItems;
-
+  
   const [filters, setFilters] = useState({
     type: "all",
     city: "",
@@ -38,69 +36,6 @@ function SearchPage() {
     minRating: 0 // Novo filtro
   })
   
-  const handleDonateItemToggle = (item) => {
-    if (item === "todos") {
-      setSelectedItemsToDonate(
-        selectedItemsToDonate.includes("todos") ? [] : ["todos"]
-      );
-      return;
-    }
-
-    let newSelection = selectedItemsToDonate.filter(i => i !== "todos");
-
-    const isSelected = newSelection.includes(item);
-
-    // 🔥 SE FOR CATEGORIA
-    if (categoryMapping[item]) {
-      const categoryItems = categoryMapping[item];
-
-      if (isSelected) {
-        // ❌ remove categoria + itens
-        newSelection = newSelection.filter(i => i !== item && !categoryItems.includes(i));
-      } else {
-        // ✅ adiciona categoria + itens
-        newSelection.push(item);
-        categoryItems.forEach(i => {
-          if (!newSelection.includes(i)) {
-            newSelection.push(i);
-          }
-        });
-      }
-    } else {
-      // 🔥 ITEM NORMAL
-      if (isSelected) {
-        newSelection = newSelection.filter(i => i !== item);
-      } else {
-        newSelection.push(item);
-      }
-    }
-
-    setSelectedItemsToDonate(newSelection);
-  };
-
-  // Lógica de seleção de itens (Checkboxes)
-  const handleItemToggle = (item) => {
-    if (item === "todos") {
-      setSelectedItems(selectedItems.includes("todos") ? [] : ["todos"]);
-      return;
-    }
-    let newSelection = selectedItems.filter(i => i !== "todos");
-    if (newSelection.includes(item)) {
-      newSelection = newSelection.filter(i => i !== item);
-    } else {
-      newSelection.push(item);
-    }
-    setSelectedItems(newSelection);
-  };
-
-  const filteredMarketItems = marketItems.filter(item => 
-    item.toLowerCase().includes(itemSearch.toLowerCase())
-  );
-
-  const filteredMarketItemsDonate = marketItems.filter(item =>
-    item.toLowerCase().includes(itemSearchDonate.toLowerCase())
-  );
-
   useEffect(() => {
     async function loadInitialData() {
       try {
@@ -127,12 +62,12 @@ function SearchPage() {
   }, [navigate])
 
   useEffect(() => {
-    setSelectedItems([]);
+    setSelectedItems(["todos"]);
     setSelectedItemsToDonate([]);
   }, [filters.type]);
 
   const loadData = useCallback(async () => {
-    if (!myProfile || loading) return;
+    if (!myProfile) return;
 
     try {
       let query = supabase.from("profiles").select("*");
@@ -158,9 +93,17 @@ function SearchPage() {
       }
 
       // 3. PROCESSAMENTO FINAL
+      const ratingsMap = {};
+
+        allRatings?.forEach(r => {
+          if (!ratingsMap[r.reviewed_id]) {
+            ratingsMap[r.reviewed_id] = [];
+          }
+          ratingsMap[r.reviewed_id].push(r.rating_number);
+        });
       const finalProfiles = profilesData
         .map(p => {
-          const userRatings = allRatings?.filter(r => r.reviewed_id === p.id) || [];
+          const userRatings = ratingsMap[p.id] || [];
           const count = userRatings.length;
           
           let avg = 5.0; // Padrão para novos
@@ -235,7 +178,7 @@ function SearchPage() {
   useEffect(() => {
     const getData = setTimeout(() => loadData(), 300) 
     return () => clearTimeout(getData) 
-  }, [loadData, filters, searchTerm])
+  }, [loadData, filters, searchTerm, selectedItems, selectedItemsToDonate])
 
   if (loading && !myProfile) return <div className="loading">Carregando...</div>
 
@@ -304,137 +247,26 @@ function SearchPage() {
 
           {/* FILTRO DE ITENS */}
           {myProfile?.is_donor === false && (
-            <div className="items-filter-section">
-              <label>Itens a receber (filtro por doador)</label>
-              <div className="item-inner-search">
-                <input 
-                  type="text" 
-                  placeholder="Procurar item..." 
-                  value={itemSearch}
-                  onChange={(e) => setItemSearch(e.target.value)}
-                />
-              </div>
-
-              <div className="items-scroll-container">
-                <div 
-                  className={`item-row ${selectedItems.includes("todos") ? "selected" : ""}`}
-                  onClick={() => handleItemToggle("todos")}
-                >
-                  <input type="checkbox" checked={selectedItems.includes("todos")} readOnly />
-                  <span>Todos</span>
-                </div>
-                {filteredMarketItems.map(item => (
-                  <div key={item} className="item-wrapper-group"> 
-                    <div className={`item-row ${selectedItems.includes(item) ? "selected" : ""}`}>
-                      <div className="item-main-clickable" onClick={() => handleItemToggle(item)}>
-                        <input type="checkbox" checked={selectedItems.includes(item)} readOnly />
-                        <span>{item}</span>
-                      </div>
-                      {(item === "congelados" || item === "hortifruti") && (
-                        <div className="info-icon-trigger">
-                          <FiInfo />
-                          <div className="inline-description">
-                            {item === "congelados" 
-                              ? "Hambúrguer, nuggets, batata frita, pizza, lasanha, sorvete..." 
-                              : "Alface, tomate, batata, cebola, alho, cenoura..."}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}             
-              </div>
-            </div>
+            <ItemFilter
+              type="receive"
+              selectedItems={selectedItems}
+              setSelectedItems={setSelectedItems}
+              itemSearch={itemSearch}
+              setItemSearch={setItemSearch}
+            />
           )}
 
           {myProfile?.is_donor === true && (
-            <div className="items-filter-section">
-              <label>Itens a doar (filtro por Instituição Arrecadadora)</label>
-              <div className="item-inner-search">
-                <input 
-                  type="text" 
-                  placeholder="Procurar item..." 
-                  value={itemSearchDonate}
-                  onChange={(e) => setItemSearchDonate(e.target.value)}
-                />
-              </div>
-              {/* 🔥 BOTÃO EXTRA */}
-              <div className="use-my-items">
-                <input
-                  type="checkbox"
-                  checked={useMyItems}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setUseMyItems(checked);
-
-                    if (checked && myProfile?.food_available) {
-                      const myItems = myProfile.food_available.map(f => f.item.toLowerCase());
-
-                      const mappedItems = new Set();
-
-                      myProfile.food_available.forEach(f => {
-                        const item = f.item.toLowerCase();
-
-                        let matchedCategory = null;
-
-                        Object.entries(categoryMapping).forEach(([category, items]) => {
-                          if (items.includes(item)) {
-                            matchedCategory = category;
-                          }
-                        });
-
-                        const mappedItems = new Set();
-
-                        myProfile.food_available.forEach(f => {
-                          const item = f.item.toLowerCase();
-
-                          // 🔥 se for categoria explícita
-                          if (categoryMapping[item]) {
-                            mappedItems.add(item);
-
-                            categoryMapping[item].forEach(i => {
-                              mappedItems.add(i);
-                            });
-
-                          } else {
-                            // 🔥 item normal → só ele
-                            mappedItems.add(item);
-                          }
-                        });
-
-                        setSelectedItemsToDonate(Array.from(mappedItems));
-                      });
-                    }
-                  }}
-                />
-                <span>Ativar no filtro abaixo sua lista de itens</span>
-              </div>
-
-              <div className="items-scroll-container">
-                <div 
-                  className={`item-row ${selectedItemsToDonate.includes("todos") ? "selected" : ""}`}
-                  onClick={() => handleDonateItemToggle("todos")}
-                >
-                  <input type="checkbox" checked={selectedItemsToDonate.includes("todos")} readOnly />
-                  <span>Todos</span>
-                </div>
-
-                {filteredMarketItemsDonate.map(item => (
-                  <div
-                    key={item}
-                    className={`item-row ${selectedItemsToDonate.includes(item) ? "selected" : ""}`}
-                    onClick={() => handleDonateItemToggle(item)}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedItemsToDonate.includes(item)}
-                      readOnly
-                    />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ItemFilter
+              type="donate"
+              selectedItems={selectedItemsToDonate}
+              setSelectedItems={setSelectedItemsToDonate}
+              itemSearch={itemSearchDonate}
+              setItemSearch={setItemSearchDonate}
+              myProfile={myProfile}
+              useMyItems={useMyItems}
+              setUseMyItems={setUseMyItems}
+            />
           )}
           <button onClick={loadData} className="filter-apply-btn">Refinar Busca</button>
         </div>

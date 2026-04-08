@@ -101,7 +101,7 @@ function Chats() {
 
           <nav>
             <ul>
-              <li onclick = {() => navigate("/profile")}>Perfil </li>
+              <li onClick = {() => navigate("/profile")}>Perfil </li>
                <li className="button_conversas" onClick={() => navigate("/search")}>
                  Procurar 🔎
               </li>

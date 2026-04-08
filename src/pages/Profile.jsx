@@ -6,6 +6,10 @@ import { getUserPosts, getMediaUrl, get_profile_photo_Url, deletePost, updatePos
 import { getCurrentUser } from "../services/authService";
 import { getOrCreateChat } from "../services/chatService"
 import BackButton from "../components/BackButton"
+import { calcRating } from "../services/ratingService";
+import { supabase } from "../lib/supabase";
+import RatingModal from "../components/RatingModal";
+import { FaStar } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -22,31 +26,42 @@ function getDisplayLocation(profile) {
   return [randomLat, randomLng];
 }
 
-function RecenterMap({ position }) {
+function RecenterMap({ position, isPhysical }) {
   const map = useMap();
 
   useEffect(() => {
     if (position) {
-      const offsetLatitude = position[0] - 0.010; 
-      const newCenter = [offsetLatitude, position[1]];
+      // Ajuste dinâmico: 
+      // Se zoom for pequeno (ex: 10), usamos um offset grande (0.04) para mover bastante o mapa.
+      // Se zoom for grande (ex: 15), usamos um offset pequeno (0.005) para não sumir com o pin.
+      const offsetValue = isPhysical ? 0.009 : 0.22; 
+      
+      const newCenter = [position[0] - offsetValue, position[1]];
 
       map.setView(newCenter, map.getZoom());
       map.invalidateSize(); 
     }
-  }, [position, map]);
+  }, [position, map, isPhysical]);
 
   return null;
 }
 
 function show_location(profile) {
 
+  if (!profile?.address){
+    return ("Sem localização")
+  }
   if (!profile) return "Carregando..."
 
-  if (profile.show_exact_location) {
-    return `${profile.address} ${profile.address_number} ${profile.address_complement}, ${profile.neighborhood} - ${profile.state}`
+  if(profile?.address == 'Online'){
+    return `${profile?.address} - ${profile?.city}, ${profile?.state} `
   }
 
-  return `${profile.address}, ${profile.neighborhood} - ${profile.state}`
+  else if (profile.show_exact_location) {
+    return `${profile?.address} ${profile?.address_number} ${profile?.address_complement}, ${profile?.neighborhood} - ${profile?.city}, ${profile?.state}`
+  }
+
+  return `${profile?.address}, ${profile?.neighborhood} - ${profile?.city}, ${profile?.state}`
 }
 
 function Profile() {
@@ -61,6 +76,7 @@ function Profile() {
   // Adicione um novo estado para o modo de edição
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState("");
+  const [showModal, setShowModal] = useState(false);
   const position = profile?.lat && profile?.lng ? getDisplayLocation(profile) : null;
 
   const handleMapClick = () => {
@@ -104,22 +120,56 @@ function Profile() {
     async function loadData() {
 
       const currentUser = await getCurrentUser();
+
+      if (!currentUser && !userId) return; // 🔥 proteção
+
       setUser(currentUser);
 
-      const idToLoad = userId || currentUser?.id
+      const idToLoad = userId || currentUser.id;
 
-      if (idToLoad) {
-        const profileData = await get_Profile(idToLoad);
-        setProfile(profileData);
+      if (!idToLoad) return;
 
-        const postsData = await getUserPosts(idToLoad);
-        setPosts(postsData);
-      }
+      // 🔹 1. busca profile
+      const profileData = await get_Profile(idToLoad);
+
+
+      // 🔹 2. busca ratings
+      const { data: ratingsData } = await supabase
+        .from("rating")
+        .select("rating_number")
+        .eq("reviewed_id", idToLoad);
+
+      const numbers = ratingsData?.map(r => r.rating_number) || [];
+
+      const { avg, count } = calcRating(numbers);
+
+      // 🔹 3. seta profile com rating
+      setProfile({
+        ...profileData,
+        avgRating: avg,
+        ratingCount: count
+      });
+
+
+      const postsData = await getUserPosts(idToLoad);
+      setPosts(postsData);
     }
 
     loadData();
 
   }, [userId]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      updateProfile(user.id, {
+        last_seen: new Date().toISOString()
+      });
+    }, 30000); // 30s
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   // 🔹 online/offline (SÓ PARA DONO)
   useEffect(() => {
@@ -129,7 +179,10 @@ function Profile() {
     if (userId && userId !== user.id) return
 
     const setOnline = async () => {
-      await updateProfile(user.id, { is_online: true })
+      await updateProfile(user.id, {
+        is_online: true,
+        last_seen: new Date().toISOString()
+      })
     }
 
     const setOffline = async () => {
@@ -145,6 +198,13 @@ function Profile() {
       window.removeEventListener("beforeunload", setOffline)
     }
   }, [user, userId])
+
+  const isOnline = (lastSeen) => {
+    if (!lastSeen) return false;
+
+    const diff = Date.now() - new Date(lastSeen).getTime();
+    return diff < 2 * 60 * 1000; // 2 minutos
+  };
 
   // 🔹 dono ou não
   const isOwner = user?.id === (userId || user?.id)
@@ -181,7 +241,7 @@ function Profile() {
           <nav>
             <ul>
               <li className="active">Perfil</li>
-               <li className="button_conversas" onClick={() => navigate("/search")}>
+               <li className="button_busca" onClick={() => navigate("/search")}>
                  Procurar 🔎
               </li>
               <li className="button_conversas" onClick={() => navigate("/chats")}>
@@ -213,20 +273,36 @@ function Profile() {
               }
               alt="profile"
             />
-          </div>
+            <div
+              className="profile-rating-inline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowModal(true);
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <FaStar className="star-icon" />
+
+              <span>
+                {profile?.avgRating > 0 ? profile.avgRating : "Novo"}
+              </span>
+            </div>
+
+            {/* 🔥 MODAL FORA */}
+            {showModal && profile && (
+              <RatingModal
+                profileId={profile.id}
+                onClose={() => setShowModal(false)}
+              />
+            )}
+            </div>
 
           <div className="profile-info">
 
             <div className="name-row">
               <h2>{profile?.name}</h2>
-
-              <div
-                className={`status-dot ${
-                  profile?.is_online ? "online" : "offline"
-                }`}
-              ></div>
+              <div className={`status-dot ${isOnline(profile?.last_seen) ? "online" : "offline"}`} />
             </div>
-
             <p className="location">📍{show_location(profile)}</p>
 
             <p className="bio">{profile?.bio}</p>
@@ -407,55 +483,59 @@ function Profile() {
 
           </div>
           )}
-        
-
-
-
+      
 
           <div className="card map-card">
             <h3>📍 Localização</h3>
             <p style={{ fontSize: '14px', marginBottom: '10px', color: '#666' }}>
-              {show_location(profile)}
+              {show_location(profile) === 'Sem localização' ? null : show_location(profile)}
             </p>
 
             {position ? (
               <div style={{ height: "300px", width: "100%", borderRadius: "12px", overflow: "hidden", position: "relative"}}>
-                <button  onClick={handleMapClick} className  = "button_google_maps" title="Clique para abrir no Google Maps">➣</button>
-                <MapContainer
-                  key={profile.id} 
-                  center={position}
-                  zoom={15}
+                <button 
+                  onClick={() => {
+                    const url = `https://www.google.com/maps/search/?api=1&query=${profile.lat},${profile.lng}`;
+                    window.open(url, '_blank');
+                  }} 
+                  className="button_google_maps" 
+                  title="Clique para abrir no Google Maps"
+                >
+                  ➣
+                </button>
+
+                {/* A key abaixo garante que o mapa recarregue se o status do endereço mudar */}
+                <MapContainer 
+                  key={`${profile.id}-${profile.physical_address}`} 
+                  center={position} 
+                  zoom={profile.physical_address ? 15 : 10} // Zoom 10 é melhor para SP
                   style={{ height: "100%", width: "100%" }}
                 >
                   <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  
-                  <RecenterMap position={position} />
+                  <RecenterMap position={position} isPhysical={profile.physical_address} />
 
-                  {profile.show_exact_location ? (
-                    /* PINO EXATO */
+                  {/* REGRA 1: Se for localização exata E tiver endereço físico, mostra o Pin */}
+                  {profile.show_exact_location && profile.physical_address ? (
                     <Marker position={position} />
                   ) : (
-                    /* ÁREA AZUL (Localização aproximada) */
-                    <>
-                      <Circle
-                        center={position}
-                        radius={150} // Raio em metros
-                        pathOptions={{
-                          color: "#3498db",
-                          fillColor: "#3498db",
-                          fillOpacity: 0.3,
-                          weight: 1
-                        }}
-                      />
-                      {/* Opcional: Um marcador diferente ou nenhum marcador no centro da área */}
-                    </>
+                    /* REGRA 2: Caso contrário (Online, ou Escondido), mostra SEMPRE o círculo */
+                    <Circle
+                      center={position}
+                      // Se não tem endereço físico (seu caso do print), raio de 7km
+                      radius={profile.physical_address ? 200 : 7000} 
+                      pathOptions={{ 
+                        color: "#1a73e8", 
+                        fillColor: "#1a73e8", 
+                        fillOpacity: 0.3, 
+                        weight: 2 
+                      }}
+                    />
                   )}
                 </MapContainer>
               </div>
             ) : (
               <div className="map-placeholder">Localização não disponível</div>
             )}
-          
           </div>
 
         </section>

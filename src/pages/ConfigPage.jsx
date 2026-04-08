@@ -72,6 +72,7 @@ function ConfigPage() {
       }
 
       alert("Todas as alterações foram salvas com sucesso!");
+      navigate("/profile")
     } catch (err) {
       console.error(err);
       alert("Erro ao salvar alterações.");
@@ -91,9 +92,26 @@ function ConfigPage() {
 
   const handleDeleteAccount = async () => {
     if (window.confirm("ATENÇÃO: Deseja realmente excluir sua conta? Esta ação é irreversível.")) {
-      await supabase.from('profiles').delete().eq('id', myId);
-      await supabase.auth.signOut();
-      window.location.href = "/";
+      setLoading(true); // É legal colocar um loading para o usuário não clicar duas vezes
+      try {
+        // 1. Apaga os dados da tabela profiles. 
+        // A nossa trigger no banco vai ouvir isso e apagar o Auth automaticamente!
+        const { error } = await supabase.from('profiles').delete().eq('id', myId);
+        
+        if (error) throw error;
+
+        // 2. Desloga o usuário localmente
+        await supabase.auth.signOut();
+        
+        alert("Sua conta foi excluída com sucesso.");
+        navigate("/"); // Redireciona para a home
+        
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao excluir conta: " + err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -147,7 +165,6 @@ function ConfigPage() {
         <button 
           className="config-button logout-btn" 
           onClick={() => navigate("/profile")}
-          style={{ flex: 1, backgroundColor: '#f3f3f3', color: '#333' }}
         >
           Sair
         </button>
@@ -156,7 +173,7 @@ function ConfigPage() {
       {/* 🧾 DADOS DA CONTA */}
       <section className="config-section">
         <h2>Dados da Conta</h2>
-        <div className="config-actions" style={{ display: 'flex', gap: '10px' }}>
+        <div className="config-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginLeft: '20px', marginRight: '20px', marginTop:'30px'}}>
           <button className="config-button" onClick={handleChangePassword} style={{ backgroundColor: '#58af9b', color: 'white' }}>
             Alterar senha
           </button>

@@ -21,7 +21,9 @@
   height: 100vh;
   position: sticky; /* Mantém a sidebar fixa ao rolar */
   top: 0;
+  
 }
+
 .logo{
   color:#2e8b75;
   margin-bottom:40px;
@@ -49,9 +51,15 @@
   white-space: nowrap;
   height: 45px; /* Aumentado para caber o texto confortavelmente */
   width: 100%;
-  font-size: 17
-  
-  px;
+  font-size: 17px
+}
+
+.sidebar li.button_config,
+.sidebar li.button_map,
+.sidebar li.button_conversas,
+.sidebar li.button_busca,
+.sidebar li.active{
+  font-size: 16px
 }
 
 .sidebar li:hover{
@@ -78,6 +86,11 @@
   gap:25px;
   margin-bottom:30px;
   align-items: center;
+}
+.profile-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
 }
 
 .profile-photo img {
@@ -336,6 +349,19 @@
   font-size:24px
 }
 
+.profile-rating-inline {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #444;
+}
+
+.star-icon {
+  color: #f5b50a;
+}
+
 .status-dot {
   width: 10px;
   height: 10px;
@@ -343,7 +369,7 @@
 }
 /* CONTAINER DE ROLAGEM */
 .food-display-scroll-container {
-  max-height: 280px;
+  max-height: 220px;
   overflow-y: auto;
   border: 1px solid #eef2f3;
   border-radius: 14px;
@@ -365,6 +391,7 @@
   border: 1px solid #f0f3f5;
   transition: all 0.2s ease;
 }
+
 .food-item-row:hover {
   transform: translateY(-1px);
   border-color: #58af9b;
@@ -374,7 +401,7 @@
 .food-name {
   font-weight: 500;
   color: #2d3748;
-  font-size: 16px;
+  font-size: 14px;
 }
 /* ESTILO DA BARRA DE ROLAGEM */
 .food-display-scroll-container::-webkit-scrollbar {
@@ -397,7 +424,7 @@
   color: white;
   padding: 4px 12px;
   border-radius: 20px; /* Garante o formato de pílula/bolinha */
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   border: none;
   display: flex;
@@ -633,4 +660,75 @@
   border-color: #58af9b;
   box-shadow: 0 0 0 2px rgba(88, 175, 155, 0.2);
   outline: none;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(6px); /* 🔥 desfoque */
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.rating-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ratings-list {
+  overflow-y: auto;
+  max-height: 250px;
+  margin-bottom: 10px;
+}
+
+.rating-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+}
+
+.review-box textarea {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.star-input {
+  display: flex;
+  gap: 5px;
+}
+.no-ratings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 20px;
+  text-align: center;
+}
+
+.no-ratings-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.no-ratings-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.no-ratings-subtitle {
+  font-size: 13px;
+  color: #777;
+  margin-top: 4px;
 }

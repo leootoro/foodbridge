@@ -363,12 +363,7 @@
   padding-bottom: 40px; /* Espaço extra no final para o último tooltip não sumir */
 }
 
-.items-filter-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px; /* 🔥 espaço entre título, busca, botão e lista */
-  margin-top: 15px;
-}
+
 .items-filter-section {
   display: flex;
   flex-direction: column;
@@ -400,6 +395,7 @@
   font-size: 13px;
   color: #555;
 }
+
 
 .use-my-items input {
   transform: scale(1.1);

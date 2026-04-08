@@ -8,7 +8,9 @@ import {getOrCreateChat} from "../services/chatService"
 import BackButton from "../components/BackButton"
 import { Circle } from "react-leaflet"
 import { getBlockedIds } from "../services/blockService"
-
+import { filterProfiles } from "../components/profileFilter";
+import { categoryMapping } from '../lib/itemCategories';
+import ItemFilter from "../components/itemFilter";
 
 function getDisplayLocation(profile) {
   if (profile.show_exact_location) {
@@ -29,6 +31,11 @@ function MapPage() {
   const [myProfile, setMyProfile] = useState(null)
   const [profiles, setProfiles] = useState([])
   const [user, setUser] = useState(null)
+  const [selectedItems, setSelectedItems] = useState(["todos"]);
+  const [selectedItemsToDonate, setSelectedItemsToDonate] = useState([]);
+  const [itemSearch, setItemSearch] = useState("");
+  const [itemSearchDonate, setItemSearchDonate] = useState("");
+  const [useMyItems, setUseMyItems] = useState(false);
 
   const [filters, setFilters] = useState({
     type: "all",
@@ -55,6 +62,11 @@ function MapPage() {
       console.error("Erro ao ir para o chat:", err)
     }
   }
+
+  useEffect(() => {
+    setSelectedItems(["todos"]);
+    setSelectedItemsToDonate([]);
+  }, [filters.type]);
 
   // 🔥 Carrega usuário
   useEffect(() => {
@@ -91,12 +103,17 @@ function MapPage() {
     loadUser()
   }, [])
 
-  // 🔥 Auto carregar dados
   useEffect(() => {
-    if (user) {
-      loadData()
+    if (user && myProfile) {
+      loadData();
     }
-  }, [user])
+  }, [
+    user,
+    myProfile,
+    filters,
+    selectedItems,
+    selectedItemsToDonate
+  ]);
 
   // 🔍 Buscar profiles
   async function loadData() {
@@ -138,34 +155,24 @@ function MapPage() {
         query = query.eq("pet_donation", filters.pet_donation)
       }
 
-      const { data, error } = await query
+      const { data, error } = await query;
 
       if (error) {
-        console.error("❌ Erro na query:", error)
-        return
+        console.error(error);
+        return;
       }
 
-      console.log("📍 Profiles encontrados:", data)
-      const filteredProfiles = data.filter(p => {
+      const filtered = filterProfiles({
+        profiles: data,
+        myProfile,
+        filters,
+        selectedItems,
+        selectedItemsToDonate,
+        blockedIds,
+        categoryMapping
+      });
 
-        // não mostra você mesmo
-        if (p.id === myProfile.id) return false
-
-        // se não quer aparecer no mapa
-        if (!p.show_on_map) return false
-
-        // 2. 🛡️ FILTRO DE PRIVACIDADE: Se o ID do perfil estiver na lista de bloqueio, removemos
-        if (blockedIds.includes(p.id)) return false;
-
-        // se ele só quer tipo oposto
-        if (p.show_only_to_opposite) {
-          return p.is_donor !== myProfile.is_donor
-        }
-
-        // caso normal
-        return true
-      })
-      setProfiles(filteredProfiles)
+      setProfiles(filtered);
 
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -180,7 +187,7 @@ function MapPage() {
   console.log("❌ Profiles sem coordenadas:", invalidProfiles)
 
   return (
-    <div style={{ height: "100vh", width: "100%" }}>
+    <div className="map-page" style={{ height: "100vh", width: "100%" }}>
 
       <div className="filters">
 
@@ -240,11 +247,34 @@ function MapPage() {
               <option value="false">Não</option>
             </select>
           </>
-        )};
+        )}
+
+        {myProfile?.is_donor === false && (
+          <ItemFilter
+            type="receive"
+            selectedItems={selectedItems}
+            setSelectedItems={setSelectedItems}
+            itemSearch={itemSearch}
+            setItemSearch={setItemSearch}
+          />
+        )}
+
+        {myProfile?.is_donor === true && (
+          <ItemFilter
+            type="donate"
+            selectedItems={selectedItemsToDonate}
+            setSelectedItems={setSelectedItemsToDonate}
+            itemSearch={itemSearchDonate}
+            setItemSearch={setItemSearchDonate}
+            myProfile={myProfile}
+            useMyItems={useMyItems}
+            setUseMyItems={setUseMyItems}
+          />
+        )}
 
         <button onClick={loadData} className="search-btn">
           Buscar
-        </button>
+        </button>-
       </div>
       <BackButton to="/profile" />
       <MapContainer
@@ -282,19 +312,28 @@ function MapPage() {
               {/* 📍 MARCADOR */}
               <Marker position={position}>
                 <Popup>
-                  <strong>{p.name}</strong><br />
-                  {p.city} - {p.neighborhood}<br />
-                  {p.accept_donation
-                    ? "Aceitando doação"
-                    : "Não pegando doação no momento"}
+                  <div style={{ marginBottom: "4px" }}>
+                    <strong>{p.name}</strong>
+                  </div>
+
+                  <div style={{ marginBottom: "4px" }}>
+                    {p.city} - {p.neighborhood}
+                  </div>
+                  <div style={{ marginBottom: "4px" }}>
+                    {p.is_donor === false && (
+                      p.accept_donation
+                        ? "Aceitando doação"
+                        : "Não aceitando doação no momento"
+                    )}
+                  </div>
+                
 
                   {!p.show_exact_location && (
-                    <div style={{ fontSize: "12px", color: "gray", marginTop: "5px" }}>
+                    <div style={{ fontSize: "12px", color: "gray", marginTop: "5px"}}>
                       📍 Localização aproximada
                     </div>
                   )}
 
-                  <br /><br />
 
                   {/* BOTÃO PERFIL */}
                   <button
@@ -309,7 +348,8 @@ function MapPage() {
                       padding: "8px 12px",
                       borderRadius: "8px",
                       cursor: "pointer",
-                      marginRight: "8px"
+                      marginRight: "8px",
+                      marginTop: "10px"
                     }}
                   >
                     Ver perfil
