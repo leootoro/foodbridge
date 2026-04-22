@@ -15,7 +15,7 @@ function EditProfile() {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [selectedFile, setSelectedFile] = useState(null)
-  const [foodList, setFoodList] = useState([{ item: "", customItem: "", quantity: 1, unit: "un" }]);
+  const [foodList, setFoodList] = useState([{ item: "", customItem: "", quantity: 1, measureValue: "", unit: "kg" }]);
   const [foodSearch, setFoodSearch] = useState("");
   const estadosBR = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", 
@@ -24,8 +24,8 @@ function EditProfile() {
 ];
 
   // Adiciona uma nova linha em branco no formulário de alimentos disponíveis.
-  const handleAddFoodRow = () => {
-    setFoodList([...foodList, { item: "", customItem: "", quantity: 1, unit: "un" }]);
+ const handleAddFoodRow = () => {
+    setFoodList([...foodList, { item: "", customItem: "", quantity: 1, measureValue: "", unit: "kg" }]);
   };
 
   //Remove linha específica do formulário de alimentos
@@ -113,7 +113,7 @@ function EditProfile() {
       if (profile.food_available && Array.isArray(profile.food_available) && profile.food_available.length > 0) {
         setFoodList(profile.food_available);
       } else {
-        setFoodList([{ item: "", customItem: "", quantity: 1, unit: "un" }]);
+        setFoodList([{ item: "", customItem: "", quantity: 1, measureValue: "", unit: "kg" }]);
       }
     }
 
@@ -397,13 +397,26 @@ function EditProfile() {
               Alimentos Disponíveis
             </label>
 
+            {/* CABEÇALHO DAS COLUNAS */}
+            <div style={{ 
+              display: "flex", 
+              gap: "10px", 
+              paddingLeft: "5px", 
+              marginBottom: "5px",
+              alignItems: "center" 
+            }}>
+              <span style={{ ...headerLabelStyle, flex: 1, minWidth: "150px" }}>Item</span>
+              <span style={{ ...headerLabelStyle, width: "165px" }}>Tamanho / Medida</span>
+              <span style={{ ...headerLabelStyle, width: "95px" }}>Quantidade</span>
+            </div>
+
             <div className="food-container">
               {foodList.map((row, index) => (
                 <div key={index} style={{ marginBottom: "15px" }}>
-                  <div className="food-row">
+                  <div className="food-row" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     
-                    {/* SELETOR CUSTOMIZADO COM BUSCA */}
-                    <div className="custom-select-wrapper">
+                    {/* 1. SELETOR DO ITEM */}
+                    <div className="custom-select-wrapper" style={{ flex: 1, minWidth: "150px" }}>
                       <div
                         className="select-display"
                         onClick={() => {
@@ -451,7 +464,7 @@ function EditProfile() {
                                       newList[index].item = item;
                                       newList[index].open = false;
                                       newList[index].search = "";
-                                      newList[index].customItem = ""; // Limpa se mudar de Outro para item da lista
+                                      newList[index].customItem = "";
                                       setFoodList(newList);
                                     }}
                                   >
@@ -478,40 +491,61 @@ function EditProfile() {
                       )}
                     </div>
 
-                    {/* QUANTIDADE */}
-                    <input
-                      type="number"
-                      min="1"
-                      value={row.quantity}
-                      onChange={(e) => handleFoodChange(index, "quantity", e.target.value)}
-                      style={{ ...inputStyle, width: "65px", textAlign: "center", padding: "10px 5px" }}
-                    />
+                    {/* 2. TAMANHO/MEDIDA (Ex: 2 Litros) */}
+                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="Ex: 2"
+                        value={row.measureValue ?? ""}
+                        onChange={(e) => handleFoodChange(index, "measureValue", e.target.value)}
+                        style={{ ...inputStyle, width: "70px", textAlign: "center", padding: "10px 5px" }}
+                      />
+                      <select
+                        value={row.unit}
+                        onChange={(e) => handleFoodChange(index, "unit", e.target.value)}
+                        style={{ ...inputStyle, width: "80px", padding: "10px 5px", backgroundColor: "white" }}
+                      >
+                        <option value="un">un</option>
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="L">Litros</option>
+                        <option value="ml">ml</option>
+                      </select>
+                    </div>
 
-                    {/* UNIDADE */}
-                    <select
-                      value={row.unit}
-                      onChange={(e) => handleFoodChange(index, "unit", e.target.value)}
-                      style={{ ...inputStyle, width: "75px", padding: "10px 5px", backgroundColor: "white" }}
-                    >
-                      <option value="un">un</option>
-                      <option value="kg">kg</option>
-                      <option value="g">g</option>
-                      <option value="L">L</option>
-                    </select>
+                    {/* 3. QUANTIDADE FINAL (Ex: 5 unidades) */}
+                    {row.unit !== 'un' ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                        <input
+                          type="number"
+                          min="1"
+                          value={row.quantity}
+                          onChange={(e) => handleFoodChange(index, "quantity", e.target.value)}
+                          style={{ ...inputStyle, width: "50px", textAlign: "center", padding: "8px 2px" }}
+                        />
+                        <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "bold" }}>un</span>
+                      </div>
+                    ) : (
+                      /* Div vazia para manter o alinhamento quando escondido */
+                      <div style={{ width: "100%" }}></div>
+                    )}
 
                     {/* REMOVER */}
                     <button 
                       type="button"
                       className="btn-remove-food-circle"
                       onClick={() => handleRemoveFoodRow(index)}
+                      style={{ marginLeft: "5px" }}
                     >
                       ✕
                     </button>
                   </div>
 
-                  {/* CAMPO EXTRA PARA "OUTRO" COM LÓGICA DE ENTER */}
+                  {/* CAMPO EXTRA PARA "OUTRO" */}
                   {row.item === "Outro" && (
-                    <div style={{ position: 'relative', marginTop: '-5px', marginBottom: '10px' }}>
+                    <div style={{ position: 'relative', marginTop: '5px', marginBottom: '10px' }}>
                       <input
                         type="text"
                         placeholder="Digite o nome e aperte Enter..."
@@ -525,9 +559,8 @@ function EditProfile() {
                           if (e.key === "Enter" && row.customItem?.trim()) {
                             e.preventDefault();
                             const newList = [...foodList];
-                            // Passa o valor do customItem para o item principal
                             newList[index].item = row.customItem.trim();
-                            newList[index].customItem = ""; // Limpa o campo temporário
+                            newList[index].customItem = "";
                             setFoodList(newList);
                           }
                         }}
@@ -541,9 +574,6 @@ function EditProfile() {
                           fontSize: "14px"
                         }}
                       />
-                      <small style={{ color: '#3897f0', fontSize: '11px', marginLeft: '5px' }}>
-                        Aperte Enter para confirmar o nome.
-                      </small>
                     </div>
                   )}
                 </div>
@@ -554,6 +584,7 @@ function EditProfile() {
               type="button" 
               onClick={handleAddFoodRow}
               className="btn-add-food"
+              style={{ marginTop: "10px" }}
             >
               + Adicionar outro item
             </button>
@@ -633,6 +664,12 @@ const buttonStyle = {
   cursor: "pointer",
   fontWeight: "bold",
   fontSize: "16px"
+};
+const headerLabelStyle = {
+  fontSize: "12px",
+  fontWeight: "bold",
+  color: "#64748b",
+  marginBottom: "5px"
 };
 
 export default EditProfile;

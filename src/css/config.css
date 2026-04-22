@@ -18,10 +18,22 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-.config-section h2 {
-  margin-bottom: 15px;
+.config-back-button {
+  display: flex; 
+  flex-direction: row; 
+  align-items: center; 
+  /* gap: 12px;  */
+  margin-left: -15px;
+  margin-bottom: 25px; 
   color: #58af9b;
-  margin-bottom: 20px
+}
+
+.config-back-button h2 {
+  /* Remove a margem padrão do h2 que costuma empurrar tudo pra baixo */
+  margin: 0; 
+  color: #58af9b;
+  font-size: 1.3rem; /* Opcional: ajuste o tamanho se ficar grande demais */
+  margin-left: -10px
 }
 
 .config-item {

@@ -52,24 +52,36 @@ export function filterProfiles({
       }
     }
 
-    // 🔵 RECEBEDOR → filtro por alimentos
     if (myProfile?.is_donor === false) {
-      if (selectedItems.includes("todos") || selectedItems.length === 0) return true;
+
+      // 🛑 Se "todos", não filtra
+      if (selectedItems.includes("todos") || selectedItems.length === 0) {
+        return true;
+      }
 
       const profileFoodNames = p.food_available?.map(f => f.item.toLowerCase()) || [];
 
-      return selectedItems.every(selected => {
+      console.log("TESTEEEEE", {
+        profile: p.name,
+        foods: profileFoodNames,
+        selectedItems
+      });
+      
+      const hasMatch = selectedItems.some(selected => {
         const selectedLower = selected.toLowerCase();
 
+        // 🔥 categoria (ex: "congelados")
         if (categoryMapping[selectedLower]) {
           const itemsInCategory = categoryMapping[selectedLower];
           return profileFoodNames.some(food => itemsInCategory.includes(food));
         }
 
+        // 🔥 item direto
         return profileFoodNames.includes(selectedLower);
       });
-    }
 
+      if (!hasMatch) return false;
+    }
     return true;
   });
 }

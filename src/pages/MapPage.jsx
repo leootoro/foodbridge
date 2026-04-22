@@ -74,9 +74,7 @@ function MapPage() {
       console.log("🔍 Carregando usuário...")
 
       const currentUser = await getCurrentUser()
-      console.log("👤 Usuário:", currentUser)
-
-      setUser(currentUser)
+        setUser(currentUser)
 
       if (!currentUser) return
 
@@ -85,8 +83,7 @@ function MapPage() {
         .select("*")
         .eq("id", currentUser.id)
         .single()
-
-      console.log("📄 Meu profile:", myProfile)
+        
       setMyProfile(myProfile)
       if (error) {
         console.error("Erro ao buscar profile:", error)
@@ -117,8 +114,6 @@ function MapPage() {
 
   // 🔍 Buscar profiles
   async function loadData() {
-    console.log("🚀 Buscando dados com filtros:", filters)
-
     if (!user || !myProfile) {
       console.log("❌ Usuário ainda não carregado")
       return
@@ -183,14 +178,10 @@ function MapPage() {
   const validProfiles = profiles.filter(p => p.lat && p.lng);
   const invalidProfiles = profiles.filter(p => !p.lat || !p.lng)
 
-  console.log("✅ Profiles válidos:", validProfiles)
-  console.log("❌ Profiles sem coordenadas:", invalidProfiles)
-
   return (
-    <div className="map-page" style={{ height: "100vh", width: "100%" }}>
+    <div className="map-page" style={{background:"white", height: "100vh", width: "100%" }}>
 
       <div className="filters">
-
         <select
           value={filters.type}
           onChange={(e) =>
@@ -287,8 +278,6 @@ function MapPage() {
         <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         {validProfiles.map(p => {
-          console.log("📌 Renderizando marker:", p)
-
           if (!p.show_on_map) return null
 
           const position = getDisplayLocation(p)

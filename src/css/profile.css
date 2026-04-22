@@ -19,9 +19,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  position: sticky; /* Mantém a sidebar fixa ao rolar */
+  position: sticky;
   top: 0;
-  
 }
 
 .logo{
@@ -58,6 +57,7 @@
 .sidebar li.button_map,
 .sidebar li.button_conversas,
 .sidebar li.button_busca,
+.sidebar li.button_sair,
 .sidebar li.active{
   font-size: 16px
 }
@@ -81,23 +81,64 @@
 
 /* HEADER */
 
-.profile-header{
-  display:flex;
-  gap:25px;
-  margin-bottom:30px;
+.profile-header {
+  display: flex;
   align-items: center;
+  gap: 16px;
 }
-.profile-photo {
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+}
+
+/* .profile-photo {
   display: flex;
   flex-direction: column;
   align-items: center; 
+  margin-top:-15px
+} */
+.profile-photo {
+  position: relative;
+  width: 80px;
+  height: 80px;
 }
 
 .profile-photo img {
-  width: 100px;
-  height: 100px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* BOTÃO BONITO E DISCRETO */
+.back-btn-overlay {
+  position: absolute;
+  top: -60px;
+  left: 20px;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+  border: none;
+
+  background: #000000;
+  color: white;
+  opacity: 60%;
+  font-size: 14px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+/* hover suave */
+.back-btn-overlay:hover {
+  background: rgb(80, 80, 81);
 }
 
 .profile-info h1{
@@ -268,8 +309,16 @@
 .gallery-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:15px;
+  gap:30px;
   row-gap: 22px;
+}
+
+.gallery-grid.owner{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:30px;
+  row-gap: 22px;
+  margin-left:-250px;
 }
 
 .gallery-grid img{
@@ -429,8 +478,9 @@
   border: none;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   min-width: 45px; /* Mantém um padrão visual */
+  gap: 4px
 }
 
 /* Ajuste para que o vídeo no grid pareça uma foto (thumbnail) */
@@ -487,11 +537,9 @@
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   overflow: hidden; /* Importante para o container cinza embaixo */
-  
   /* 🟢 TAMANHO DEFINIDO: Largura fixa, mas responsiva */
   width: 100%;
   max-width: 550px; /* Largura ideal para fotos de perfil/galeria */
-  
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -517,6 +565,7 @@
   border-radius: 8px; /* Arredondado suave na foto */
   object-fit: contain;
   display: block;
+  z-index: 1;
 }
 
 /* 4. CONTAINER CINZA DA MENSAGEM */
@@ -549,6 +598,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 9999;
   
   background: rgba(255, 255, 255, 0.8);
   border: none;

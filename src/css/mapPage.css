@@ -20,6 +20,8 @@ html, body {
   max-height: 90vh;
   overflow-y: auto;
   pointer-events: auto;
+  margin-left: 25px;
+  margin-top: -50px;
 }
 
 

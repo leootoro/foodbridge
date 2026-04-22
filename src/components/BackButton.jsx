@@ -1,17 +1,34 @@
 import { useNavigate } from "react-router-dom"
 
-function BackButton({ to }) {
+function BackButton() {
   const navigate = useNavigate()
 
   return (
     <button
-      onClick={() => navigate(to)}
+      onClick={() => {
+        if (window.history.length > 1) {
+          navigate(-1)
+        } else {
+          navigate("/profile") // ou qualquer rota padrão
+        }
+      }}
       style={{
-        background: "none",
-        border: "white",
+        background: "white",
+        border: "none",
+        color: "black",
+
         fontSize: 20,
         cursor: "pointer",
-        marginRight: 10
+        marginLeft: 10,
+        marginRight:15,
+        padding: 6,
+        borderRadius: "50%",
+
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+
+        lineHeight: 1
       }}
     >
       ←

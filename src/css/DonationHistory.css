@@ -1,0 +1,102 @@
+.history-page {
+  padding: 20px;
+  position: relative;
+}
+
+.back-button-wrapper {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+}
+
+.back-button-wrapper button {
+  background: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.history-page h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* CARD */
+.history-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* CORES STATUS */
+.status.pendente {
+  background: #ffeaa7;
+  color: #b7791f;
+}
+
+.status.concluido {
+  background: #55efc4;
+  color: #065f46;
+}
+
+.status.cancelado {
+  background: #fab1a0;
+  color: #7f1d1d;
+}
+
+.date {
+  font-size: 12px;
+  color: #777;
+}
+
+/* ITENS */
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.item-name {
+  color: #333;
+}
+
+.item-qty {
+  font-weight: bold;
+  color: #16a085;
+}
+
+/* DELIVERY */
+.delivery {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #555;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+}

@@ -2,6 +2,7 @@ import { useState, useEffect} from "react"
 import { supabase } from "../lib/supabase"
 import BlockManagerModal from "../components/BlockManagerModal" // Certifique-se de usar o export default lá
 import { useNavigate } from "react-router-dom"; 
+import BackButton from "../components/BackButton";
 import "../css/config.css"
 
 
@@ -117,11 +118,15 @@ function ConfigPage() {
 
   return (
     <div className="config-container">
+
       <h1>Configurações</h1>
 
       {/* 🔒 PRIVACIDADE E SEGURANÇA */}
       <section className="config-section">
-        <h2>Privacidade e Segurança</h2>
+        <div className="config-back-button">
+          <BackButton to="/profile" />
+          <h2>Privacidade e Segurança</h2>
+        </div>
         <div className="config-item">
           <label>Mostrar apenas para usuários do tipo oposto</label>
           <input type="checkbox" checked={settings.show_only_to_opposite} onChange={() => handleToggle("show_only_to_opposite")} />

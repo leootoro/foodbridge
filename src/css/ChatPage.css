@@ -126,12 +126,27 @@
 }
 
 /* INPUT */
+.btn-programar {
+  background: #f0f0f0;
+  border: none;
+  font-size: 1.5rem;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-right: 8px;
+}
+
+.btn-programar:hover {
+  background: #e0e0e0;
+}
 
 .chat-input {
   display: flex;
   align-items: center;
-  padding: 10px 5%; /* Alinhado com o padding das mensagens */
-  background: #f0f0f0;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #eee;
   width: 100%;
   box-sizing: border-box;
 }
@@ -164,4 +179,439 @@
 
 .chat-input button:hover {
   background: #1ebe5d;
+}
+
+/* Responsividade para Telas Pequenas */
+@media (max-width: 768px) {
+  .modal-content-chat {
+    grid-template-columns: 1fr; /* Vira uma coluna só no celular */
+  }
+  .food-scroll {
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    max-height: 200px;
+  }
+  .modal-content-chat {
+    grid-template-columns: 1fr;
+  }
+  .food-selection-section {
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+  }
+}
+.donation-modal {
+  background: white;
+  width: 90%;
+  max-width: 850px; /* Largura ideal para caber as duas coisas */
+  max-height: 90vh; /* Se a tela for pequena, ele cria scroll interno */
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* O SEGREDO: Novo grid sem herdar CSS global sujo */
+.donation-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Duas colunas exatamente iguais (50% / 50%) */
+  gap: 30px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Título e Texto de Ajuda */
+.donation-modal h2, .modal-help {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* CONTEÚDO LADO A LADO - Resolvendo o corte lateral */
+.modal-content-chat {
+  display: flex;
+  flex-direction: row; /* Força ficar lado a lado */
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px; /* Espaço entre a lista e o calendário */
+  padding: 20px 10px;
+  width: 100%;
+}
+
+/* Títulos */
+.modal-content-chat h3 {
+  color: #333;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #f0f7f6;
+  padding-bottom: 8px;
+}
+
+/* LISTA DE ALIMENTOS */
+.food-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.food-edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fdfdfd;
+  border: 1px solid #e2efed;
+  padding: 10px 15px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.food-name {
+  font-size: 0.95rem;
+  color: #333;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Se o nome for gigante, ele coloca "..." */
+}
+
+.food-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Input de quantidade */
+.input-qty {
+  width: 60px;
+  padding: 6px;
+  border: 1px solid #5bb3a3;
+  border-radius: 6px;
+  text-align: center;
+  color: #5bb3a3;
+  font-weight: bold;
+}
+
+/* Badge de Unidade (Igual ao seu perfil) */
+.unit-label {
+  background: #5bb3a3;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+
+/* Lado dos Alimentos */
+.food-selection-section {
+  width: 100%;
+  border-right: 1px solid #eee;
+  padding-right: 20px;
+}
+
+/* Forçar o DatePicker a não estourar o container */
+.react-datepicker-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.react-datepicker__header {
+  background-color: #f8fbfb !important;
+  border-bottom: 1px solid #e2efed !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: #5bb3a3 !important;
+}
+
+/* BOTÃO CONFIRMAR */
+.btn-confirm-donation {
+  background: #5bb3a3;
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 20px;
+}
+
+.btn-confirm-donation:hover {
+  background: #4a9689;
+}
+
+.btn-remove-minus {
+  background: #ff4d4d; /* Vermelho vibrante */
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%; /* Redondo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  padding: 0;
+  margin-left: 5px;
+}
+
+.btn-remove-minus:hover {
+  background: #ff3333;
+  transform: scale(1.1);
+}
+
+.minus-icon {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+  margin-top: -2px; /* Ajuste fino para centralizar o traço */
+}
+
+/* Coluna da Direita (Calendário) */
+.calendar-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+
+/* Ajuste no DatePicker para não estourar */
+.react-datepicker {
+  transform: scale(1.05); /* Aumenta levemente o calendário para preencher o lado direito */
+}
+
+/* Centralizar o botão de confirmação embaixo das duas colunas */
+.modal-footer {
+  grid-column: span 2;
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+/* Afasta o título do calendário */
+.calendar-section h3 {
+  margin-bottom: 25px; /* Aumente ou diminua esse valor conforme achar melhor */
+}
+
+/* Caso queira que o título da outra coluna também fique alinhado */
+.food-selection-section h3 {
+  margin-bottom: 25px; 
+}
+
+/* CARD PRINCIPAL */
+.donation-card-message {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  min-width: 240px;
+  backdrop-filter: blur(4px);
+}
+
+/* HEADER */
+.donation-header {
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  text-align: center;
+  font-size: 0.9em;
+  color: #128c7e;
+  letter-spacing: 0.5px;
+}
+
+/* LISTA DE ITENS */
+.donation-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ITEM INDIVIDUAL */
+.donation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.08);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+/* NOME DO ITEM */
+.donation-item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* QUANTIDADE */
+.donation-item-qty {
+  color: #128c7e;
+  font-weight: bold;
+}
+
+/* BLOCO DA DATA */
+.donation-date {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.85em;
+}
+
+.donation-date-box {
+  background: rgba(255,255,255,0.08);
+  padding: 8px;
+  border-radius: 6px;
+}
+
+/* BOTÕES */
+.donation-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.donation-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.donation-btn.success {
+  background-color: #27ae60;
+}
+
+.donation-btn.danger {
+  background-color: #e74c3c;
+}
+
+.donation-btn.disabled {
+  background-color: #4a4a4a;
+  cursor: not-allowed;
+}
+.delete-message-btn {
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.delete-message-btn:hover {
+  color: #ff4d4d;
+}
+
+.message-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+
+/* botão escondido */
+.delete-message-btn {
+  position: absolute;
+  top: 50%;
+  right: -28px;
+  transform: translateY(-50%);
+  opacity: 0;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 50%;
+  padding: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 12px;
+}
+
+/* aparece no hover */
+.message-wrapper:hover .delete-message-btn {
+  opacity: 1;
+}
+
+/* hover mais bonito */
+.delete-message-btn:hover {
+  background: #ff4d4d;
+  color: white;
+}
+
+/* container geral (centraliza) */
+.chat-input-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  background: transparent;
+}
+
+/* caixa principal */
+.chat-input-box {
+  width: 95%;
+  max-width: 1000px;
+  display: flex;
+  align-items: center;
+  background: #f0f2f5;
+  border-radius: 25px;
+  padding: 8px 12px;
+  gap: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* input */
+.chat-input-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 8px;
+  height: 40px;
+}
+
+/* área dos botões */
+.chat-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* botão enviar */
+.btn-send {
+  background: #25d366;
+  border: none;
+  color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* botão agendar */
+.btn-agendar {
+  background: #128c7e;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* hover */
+.btn-send:hover {
+  background: #20b358;
+}
+
+.btn-agendar:hover {
+  background: #0f7a6c;
 }

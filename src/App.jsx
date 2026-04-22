@@ -13,6 +13,7 @@ import Chat from './pages/Individual_chat';
 import MapPage from './pages/MapPage';
 import ConfigPage from  './pages/ConfigPage';
 import SearchPage from "./pages/SearchPage"
+import DonationHistory from "./pages/DonationHistory";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -35,6 +36,7 @@ function AppContent() {
       <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
       <Route path="/config" element={<ProtectedRoute><ConfigPage /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+      <Route path="/donation-history" element={<ProtectedRoute><DonationHistory /></ProtectedRoute>} />
     </Routes>
   );
 }

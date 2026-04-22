@@ -5,7 +5,6 @@ import { get_Profile, updateProfile } from "../services/profileService";
 import { getUserPosts, getMediaUrl, get_profile_photo_Url, deletePost, updatePostText } from "../services/mediaService";
 import { getCurrentUser } from "../services/authService";
 import { getOrCreateChat } from "../services/chatService"
-import BackButton from "../components/BackButton"
 import { calcRating } from "../services/ratingService";
 import { supabase } from "../lib/supabase";
 import RatingModal from "../components/RatingModal";
@@ -250,8 +249,14 @@ function Profile() {
               <li className="button_map" onClick={() => navigate("/map")}>
                   Mapa
               </li>
+              <li className="button_map" onClick={() => navigate("/donation-history")}>
+                  Histórico de Doações
+              </li>
               <li className="button_config" onClick={() => navigate("/config")}>
                   Configurações
+              </li>
+              <li className="button_sair" onClick={() => navigate("/")}>
+                  Sair
               </li>
             </ul>
           </nav>
@@ -263,8 +268,12 @@ function Profile() {
 
         {/* HEADER */}
         <section className="profile-header">
-
           <div className="profile-photo">
+            {!isOwner && (
+              <button className="back-btn-overlay" onClick={() => navigate(-1)}>
+                ←
+              </button>
+            )}
             <img
               src={
                 profile?.photo_url
@@ -298,7 +307,6 @@ function Profile() {
             </div>
 
           <div className="profile-info">
-
             <div className="name-row">
               <h2>{profile?.name}</h2>
               <div className={`status-dot ${isOnline(profile?.last_seen) ? "online" : "offline"}`} />
@@ -462,14 +470,28 @@ function Profile() {
                 {profile?.food_available && Array.isArray(profile.food_available) ? (
                   profile?.food_available.map((food, index) => (
                     <div key={index} className="food-item-row">
-                      {/* Nome do Alimento */}
-                      <span className = "food-name">
-                        {food.item === "Outro" ? food.customItem : food.item}
-                      </span>
 
-                      {/* Quantidade e Unidade */}
+                      {/* Lado Esquerdo: Nome + Medida entre parênteses (se não for "un") */}
+                      <div className="food-name-wrapper">
+                        <span className="food-name" style={{ fontWeight: '500' }}>
+                          {food.item === "Outro" ? food.customItem : food.item}
+                        </span>
+                        
+                        {/* Só mostra os parênteses se a medida for diferente de "un" */}
+                        {food.unit !== "un" && food.measureValue && (
+                          <span className="food-measure-inline" style={{ marginLeft: '6px', color: '#64748b', fontSize: '0.95em' }}>
+                            ({food.measureValue}{food.unit})
+                          </span>
+                        )}
+                      </div>
+                      {/* Lado Direito: Badge com a Quantidade Final */}
                       <span className="food-badge">
-                        {food.quantity} {food.unit}
+                        {/* Se a unidade for 'un', o badge mostra o valor da medida. 
+                            Se for kg/ml, o badge mostra a quantidade de unidades (ex: 5 un) */}
+                        {food.unit === "un" 
+                          ? `${food.measureValue || 0} UN` 
+                          : `${food.quantity || 1} UN`
+                        }
                       </span>
                     </div>
                   ))
@@ -483,8 +505,6 @@ function Profile() {
 
           </div>
           )}
-      
-
           <div className="card map-card">
             <h3>📍 Localização</h3>
             <p style={{ fontSize: '14px', marginBottom: '10px', color: '#666' }}>
@@ -544,8 +564,8 @@ function Profile() {
         <section className="gallery">
 
           <h2>Fotos e Vídeos</h2>
-
-          <div className="gallery-grid">
+           <div className={`gallery-grid ${isOwner ? "owner" : ""}`}>
+            
             {posts.map((post) => {
               const url = getMediaUrl(post.media_url);
 
@@ -568,7 +588,6 @@ function Profile() {
                   </div>
                 );
               }
-
               return null;
             })}
           </div>

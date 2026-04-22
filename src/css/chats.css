@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  position: sticky; /* Mantém a sidebar fixa ao rolar */
+  position: sticky;
   top: 0;
 }
 
@@ -79,7 +79,34 @@
 .chat-bottom {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: 5px;
+}
+
+.btn-delete-chat {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 5px;
+  opacity: 0.3;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 10;
+}
+
+.chat-item:hover .btn-delete-chat {
+  opacity: 1; /* O ícone de lixo aparece ao passar o mouse na conversa */
+}
+
+.btn-delete-chat:hover {
+  color: #ff4d4d;
+  transform: scale(1.2);
+}
+
+.chat-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .chat-message {
