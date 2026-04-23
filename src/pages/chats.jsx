@@ -96,8 +96,12 @@ function Chats() {
             <li onClick={() => navigate("/search")}>Procurar 🔎</li>
             <li className="active" onClick={() => navigate("/chats")}>Conversas</li>
             <li onClick={() => navigate("/map")}>Mapa</li>
+            <li className="button_map" onClick={() => navigate("/donation-history")}>
+                  Histórico de Doações
+              </li>
             <li onClick={() => navigate("/config")}>Configurações</li>
             <li className="button_sair" onClick={() => navigate("/")}>Sair</li>
+            
           </ul>
         </nav>
       </aside>

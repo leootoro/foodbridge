@@ -182,9 +182,16 @@ function Chat() {
               )}
             </div>
 
-            <div className={`donation-status ${status}`}>
-              {status || "Doação Removida"}
+  
+            <div className={`donation-status ${status || "pendente"}`}>
+              {status || "Pendente"}
             </div>
+
+             {status === "removido" && (
+                <div className="donation-status deleted">
+                  Doação removida
+                </div>
+              )}
 
             {/* BOTÕES */}
             {msg.sender_id !== user?.id && deliveryDate && status && status != 'concluido' && (
@@ -303,11 +310,16 @@ function Chat() {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, last_seen")
+          .select("name, last_seen, is_donor")
           .eq("id", otherUserId)
           .single()
 
-        setOtherUser({ id: otherUserId, name: profile.name, last_seen: profile.last_seen })
+        setOtherUser({
+          id: otherUserId,
+          name: profile.name,
+          last_seen: profile.last_seen,
+          is_donor: profile.is_donor
+        });
         const msgs = await getMessages(chatId)
         setMessages(msgs)
         // 🔥 pegar IDs das doações nas mensagens
@@ -434,13 +446,15 @@ function Chat() {
               >
                 ➤
               </button>
-
-              <button
-                className="btn-agendar"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Agendar Doação
-              </button>
+              
+              {user?.is_donor === true && otherUser?.is_donor === false && (
+                <button
+                  className="btn-agendar"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Agendar Doação
+                </button>
+              )}
             </div>
 
           </div>

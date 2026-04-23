@@ -58,8 +58,8 @@
 }
 
 .status.concluido {
-  background: #55efc4;
-  color: #065f46;
+  background: #3fcda5;
+  color: #4d655e;
 }
 
 .status.cancelado {
@@ -99,4 +99,38 @@
 .empty {
   text-align: center;
   color: #999;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0, 0, 0, 0.3); /* escurece levemente */
+
+  backdrop-filter: blur(6px);       /* 👈 BORRÃO */
+  -webkit-backdrop-filter: blur(6px); /* Safari */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+}
+.modal-history {
+  background: rgb(227, 223, 223);
+  border-radius: 16px;
+  padding: 24px;
+
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.25),
+    0 0 0 1px rgba(0,0,0,0.05); /* borda suave */
+
+  position: relative;
 }

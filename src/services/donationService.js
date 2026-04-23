@@ -21,12 +21,27 @@ export const createDonation = async (donorId, institutionId, deliveryDate, items
   }
 
   // 2. Inserir na tabela 'donation_itens'
-  const itemsToInsert = items.map(item => ({
-    donation_id: donation.id,
-    food_name: item.item === "Outro" ? item.customItem : item.item,
-    quantity: item.quantity, // Verifique se é 'quantity' ou 'quantitity' no banco!
-    unit: item.unit || "un"
-  }));
+  const itemsToInsert = items.map(item => {
+    const name = item.item === "Outro" ? item.customItem : item.item;
+
+    let volume = null;
+
+    if (item.unit !== "un" && item.measureValue) {
+      if (item.unit.toLowerCase().includes("l")) {
+        volume = `${item.measureValue}L`;
+      } else if (item.unit === "g") {
+        volume = `${item.measureValue}g`;
+      }
+    }
+
+    return {
+      donation_id: donation.id,
+      food_name: name,
+      quantity: item.quantity,
+      unit: "un",
+      volume
+    };
+  });
 
   const { error: itemsError } = await supabase
     .from("donation_itens")
@@ -148,9 +163,21 @@ export const getUserDonations = async (user, profile) => {
   let query = supabase
     .from("donations")
     .select(`
-      *,
-      donor:profiles!donations_donor_id_fkey(name),
-      institution:profiles!donations_institution_id_fkey(name),
+      id,
+      created_at,
+      status,
+      delivery_date,
+      donor_id,
+      institution_id,
+
+      donor:profiles!donor_id (
+        name
+      ),
+
+      institution:profiles!institution_id (
+        name
+      ),
+
       donation_itens (
         food_name,
         quantity,
@@ -160,7 +187,7 @@ export const getUserDonations = async (user, profile) => {
     `)
     .order("created_at", { ascending: false });
 
-  if (profile.is_donor) {
+  if (profile.is_donor === true) {
     query = query.eq("donor_id", user.id);
   } else {
     query = query.eq("institution_id", user.id);
@@ -168,21 +195,28 @@ export const getUserDonations = async (user, profile) => {
 
   const { data, error } = await query;
 
-  if (error) return { data: null, error };
+  if (error) {
+    console.error("Erro ao buscar doações:", error);
+    return { data: [], error };
+  }
 
-  // normaliza
-  const formatted = data.map(d => ({
-    ...d,
-    items: d.donation_itens.map(i => ({
-      name: i.food_name,
-      quantity: i.quantity,
-      unit: i.unit,
-      volume: i.volume
-    })),
-    otherName: profile.is_donor
+  // 🔥 FORMATAR AQUI (IMPORTANTE)
+  const formatted = data.map(d => {
+    const otherName = profile.is_donor
       ? d.institution?.name
-      : d.donor?.name
-  }));
+      : d.donor?.name;
+
+    return {
+      ...d,
+      otherName,
+      items: d.donation_itens.map(i => ({
+        name: i.food_name,
+        quantity: i.quantity,
+        unit: i.unit,
+        volume: i.volume
+      }))
+    };
+  });
 
   return { data: formatted, error: null };
 };
