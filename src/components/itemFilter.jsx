@@ -15,7 +15,7 @@ function ItemFilter({
 
   const marketItems = expandedMarketItems;
 
-  // 🔥 TOGGLE UNIFICADO
+  // TOGGLE UNIFICADO
   const handleToggle = (item) => {
     if (item === "todos") {
       setSelectedItems(selectedItems.includes("todos") ? [] : ["todos"]);
@@ -25,7 +25,7 @@ function ItemFilter({
     let newSelection = selectedItems.filter(i => i !== "todos");
     const isSelected = newSelection.includes(item);
 
-    // 🟢 MODO DOADOR (COM CATEGORIA)
+    // MODO DOADOR (COM CATEGORIA)
     if (type === "donate" && categoryMapping[item]) {
       const categoryItems = categoryMapping[item];
 
@@ -51,7 +51,7 @@ function ItemFilter({
     setSelectedItems(newSelection);
   };
 
-  // 🔥 FILTRO DE BUSCA
+  //  FILTRO DE BUSCA
   const filteredItems = marketItems.filter(item =>
     item.toLowerCase().includes(itemSearch.toLowerCase())
   );
@@ -76,7 +76,6 @@ function ItemFilter({
       setSelectedItems(Array.from(mappedItems));
 
     } else {
-      // 🔥 ESSA LINHA FALTAVA
       setSelectedItems([]);
     }
   };
@@ -97,7 +96,7 @@ function ItemFilter({
         />
       </div>
 
-      {/* 🔥 EXTRA DOADOR */}
+      {/* DOADOR */}
       {type === "donate" && (
         <div className="use-my-items">
           <input

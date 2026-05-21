@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabase"
-import {
-  getChatById,
-  getMessages,
-  sendMessage
-} from "../services/chatService"
+import { getChatById, getMessages, sendMessage} from "../services/chatService"
 import "../css/ChatPage.css"
 import BackButton from "../components/BackButton"
 import { updateProfile } from "../services/profileService";
@@ -13,8 +9,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { registerLocale } from  "react-datepicker";
 import ptBR from 'date-fns/locale/pt-BR';
-registerLocale('pt-BR', ptBR);
 import { updateDonationStatus, createDonation, createDonationWithMessage, parseDonationMessage} from "../services/donationService";
+registerLocale('pt-BR', ptBR);
 
 function Chat() {
   const navigate = useNavigate()
@@ -29,7 +25,9 @@ function Chat() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [donationItems, setDonationItems] = useState([]);
   const [donationStatusMap, setDonationStatusMap] = useState({});
-
+  const [originalItems, setOriginalItems] = useState([]);
+  const [isChatBlocked, setIsChatBlocked] = useState(false);
+ 
   const handleDeleteMessage = async (messageId) => {
     const confirmDelete = window.confirm("Apagar mensagem?");
     if (!confirmDelete) return;
@@ -43,9 +41,17 @@ function Chat() {
       console.error("Erro ao deletar mensagem:", err);
     }
   };
+
+  function getDisplayQuantity(food) {
+    const value = food.unit === "un"
+      ? food.measureValue
+      : food.quantity;
+
+    return value === "" || value === undefined ? "" : value;
+  }
   // --- FUNÇÃO QUE SALVA NO BANCO E ENVIA MENSAGEM ---
   const handleConfirmAgendamento = async () => {
-    // 🛑 trava botão durante execução
+    // Não deixa reenviar se estiver carregando (já cliquei uma vez)
     if (loading) return;
 
     setLoading(true);
@@ -59,9 +65,13 @@ function Chat() {
       }
 
       // 2. validar itens
-      const itensValidos = donationItems.filter(
-        i => Number(i.quantity) > 0
-      );
+      const itensValidos = donationItems.filter(i => {
+        const qty = i.unit === "un"
+          ? Number(i.measureValue)
+          : Number(i.quantity);
+
+        return qty > 0;
+      });
 
       if (itensValidos.length === 0) {
         alert("Adicione pelo menos um item!");
@@ -78,32 +88,36 @@ function Chat() {
         selectedDate.toISOString(),
         itensValidos
       );
-
+    
       if (error) {
         console.error("Erro ao criar doação:", error);
         setLoading(false);
         return;
       }
-
       console.log("Doação criada:", data);
+
+       //ATUALIZA STATUS IMEDIATAMENTE
+      setDonationStatusMap(prev => ({
+        ...prev,
+        [data.donation.id]: "pendente"
+      }));
 
       // 4. enviar mensagem
       await sendMessage(chatId, user.id, data.message);
 
-      // 5. atualizar UI (IMPORTANTE!)
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          sender_id: user.id,
-          message_text: data.message,
-          created_at: new Date().toISOString()
-        }
-      ]);
-
       // 6. limpar estado
-      setDonationItems([]);
+      const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .select("food_available")
+        .eq("id", user.id)
+        .single();
+
+      setDonationItems(updatedProfile.food_available || []);
       setSelectedDate(null);
+    
+      setOriginalItems(
+        (updatedProfile.food_available || []).map(item => ({ ...item }))
+      );
 
       // 7. fechar modal
       setIsModalOpen(false);
@@ -116,33 +130,49 @@ function Chat() {
     }
   };
 
-  const handleNaoRecebi = async (donationId) => {
-    const confirm = window.confirm("Deseja marcar como não recebido? Isso excluirá o registro da doação.");
-    if (!confirm) return;
+  const handleRemoveItem = (index) => {
+    const confirmRemove = window.confirm("Remover este item da doação?");
+    if (!confirmRemove) return;
 
-    try {
-      await supabase.from("donation_itens").delete().eq("donation_id", donationId);
-      await supabase.from("donations").delete().eq("id", donationId);
-      alert("Registro removido.");
-      // Opcional: recarregar mensagens ou enviar aviso no chat
-    } catch (err) {
-      console.error(err);
-    }
-    setDonationStatusMap(prev => ({
-      ...prev,
-      [donationId]: 'removido'
-    }));
+    const updated = donationItems.filter((_, i) => i !== index);
+    setDonationItems(updated);
   };
 
-  const renderMessage = (msg, user, updateDonationStatus, handleNaoRecebi) => {
-    const parsed = parseDonationMessage(msg.message_text);
+  const handleNaoRecebi = async (donationId) => {
+    const confirm = window.confirm("Deseja cancelar?");
+    if (!confirm) return;
+
+    const { data, error } = await supabase
+      .from("donations")
+      .update({ status: "cancelado" })
+      .eq("id", donationId)
+      .select()
+
+    if (error) {
+      console.error("Erro ao cancelar:", error);
+      alert("Erro ao cancelar doação");
+      return;
+    }
+
+    // atualiza status na UI
+    setDonationStatusMap(prev => ({
+      ...prev,
+      [donationId]: "cancelado"
+    }));
+     await reloadProfileItems();
+  };
+  const renderMessage = (msg) => {
   
-    // 📦 DOAÇÃO
-    if (parsed) {
+    const parsed = parseDonationMessage(msg.message_text);
+ 
+    // DOAÇÃO
+     if (parsed && parsed.donationId && Array.isArray(parsed.items) && parsed.items.length > 0) {
       const deliveryDate = parsed.deliveryDate
         ? new Date(parsed.deliveryDate)
         : null;
-      const status = donationStatusMap[parsed.donationId];
+       const status = parsed?.donationId
+        ? donationStatusMap[parsed.donationId]
+        : null;
 
       return (
         <div className="donation-card-message">
@@ -187,19 +217,37 @@ function Chat() {
               {status || "Pendente"}
             </div>
 
-             {status === "removido" && (
+             {status === "cancelado" && (
                 <div className="donation-status deleted">
                   Doação removida
                 </div>
               )}
 
-            {/* BOTÕES */}
-            {msg.sender_id !== user?.id && deliveryDate && status && status != 'concluido' && (
+
+            {/* Botão de cancelamento pro donor apenas */}
+            {msg.sender_id == user?.id && status === 'pendente' && (
+                <div>
+                  <button
+                    onClick={() => {
+                      handleNaoRecebi(parsed.donationId);
+                      // handleDeleteMessage(msg.id);
+                    }}
+                    className={`cancel-donation-btn ${
+                      new Date() >= deliveryDate ? 'danger' : 'disabled'
+                    }`}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+            )}
+          
+            {msg.sender_id !== user?.id && deliveryDate && status == 'pendente' && (
               <div className="donation-actions">
                 <button
                   disabled={new Date() < deliveryDate}
                   onClick={async () => {
                     const { error } = await updateDonationStatus(parsed.donationId, 'concluido');
+                    console.log("FUNÇÃO:", updateDonationStatus);
 
                     if (error) {
                       console.error(error);
@@ -240,26 +288,143 @@ function Chat() {
       );
     }
 
-    // 💬 TEXTO NORMAL
-    return msg.message_text;
+    // TEXTO NORMAL
+    return (
+      msg.message_text
+    );
   };
+  useEffect(() => {
+    if (!user?.id || !otherUser?.id) return;
+    const channel = supabase
+      .channel("blocked-users")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "blocked_users"
+        },
+          () => checkBlocked(user.id, otherUser.id)
+      )
+      .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: `id=eq.${otherUser.id}`
+      },
+        () => {
+          checkBlocked(user.id, otherUser.id);
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [user, otherUser]);
 
   useEffect(() => {
-    if (user?.food_available && user.food_available.length > 0) {
-      setDonationItems(user.food_available);
-    } else {
-      console.warn("food_available vazio ou null");
-    }
-  }, [user]);
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel("profile-update")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${user.id}`
+        },
+        (payload) => {
+          setUser(prev => ({
+            ...prev,
+            ...payload.new
+          }));
+
+          //ATUALIZA OS ITENS AUTOMATICAMENTE
+          setDonationItems(payload.new.food_available || []);
+          setOriginalItems(
+            (payload.new.food_available || []).map(i => ({ ...i }))
+          );
+        }
+      )
+      .subscribe((status) => {
+        console.log("STATUS PROFILE:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const handleUpdateQuantity = (index, newQty) => {
     const updated = [...donationItems];
-    updated[index].quantity = newQty;
+
+    // permite digitação livre
+    if (newQty === "") {
+      if (updated[index].unit === "un") {
+        updated[index].measureValue = "";
+      } else {
+        updated[index].quantity = "";
+      }
+      setDonationItems(updated);
+      return;
+    }
+
+    let value = parseInt(newQty, 10);
+    if (isNaN(value)) value = ""; 
+    const item = originalItems[index];
+    if (!item) return;
+
+    const maxQty =
+      item.unit === "un"
+        ? Number(item.measureValue || 0)
+        : Number(item.quantity || 1);
+
+    if (value > maxQty) value = maxQty;
+    if (value < 1) value = 1;
+
+    if (updated[index].unit === "un") {
+      updated[index].measureValue = value;
+    } else {
+      updated[index].quantity = value;
+    }
+
     setDonationItems(updated);
   };
 
-  const handleRemoveItem = (index) => {
-    setDonationItems(donationItems.filter((_, i) => i !== index));
+  const reloadProfileItems = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("food_available")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Erro ao recarregar profile:", error);
+      return;
+    }
+
+    setDonationItems(data.food_available || []);
+    setOriginalItems(
+      (data.food_available || []).map(i => ({ ...i }))
+    );
+  };
+
+  const reloadDonations = async () => {
+    const { data, error } = await supabase
+      .from("donations")
+      .select("id, status")
+    
+    if (!error) {
+      const map = {};
+      data.forEach(d => {
+        map[d.id] = d.status;
+      });
+
+      setDonationStatusMap(map);
+    }
   };
 
   const isOnline = (lastSeen) => {
@@ -302,6 +467,25 @@ function Chat() {
 
         setUser({ ...currentUser, ...myProfile })
 
+        const checkBlocked = async (currentUserId, otherUserId) => {
+          //verifica bloqueio
+          
+          const { data: blockedData } = await supabase
+            .from("blocked_users")
+            .select("*")
+            .or(`and(user_id.eq.${currentUserId},blocked_user_id.eq.${otherUserId}),and(user_id.eq.${otherUserId},blocked_user_id.eq.${currentUserId})`);
+          
+          //verifica allow_chat_requests
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("allow_chat_requests")
+            .eq("id", otherUserId)
+            .single();
+          const isBlocked = blockedData?.length > 0;
+          const doesNotAcceptChat = profile?.allow_chat_requests === false;
+
+          setIsChatBlocked(isBlocked || doesNotAcceptChat);
+        };
         const chat = await getChatById(chatId)
         if (!chat) { navigate("/chats"); return; }
 
@@ -320,9 +504,15 @@ function Chat() {
           last_seen: profile.last_seen,
           is_donor: profile.is_donor
         });
+        await checkBlocked(currentUser.id, otherUserId);
+        setDonationItems(myProfile.food_available || []);
+        setOriginalItems((myProfile.food_available || []).map(i => ({ ...i })));
         const msgs = await getMessages(chatId)
-        setMessages(msgs)
-        // 🔥 pegar IDs das doações nas mensagens
+        setMessages(
+          msgs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        );
+        console.log("MESSAGES FROM DB:", msgs);
+        // pegar IDs das doações nas mensagens
         const donationIds = msgs
           .map(m => {
             const parsed = parseDonationMessage(m.message_text);
@@ -330,7 +520,7 @@ function Chat() {
           })
           .filter(Boolean);
 
-        // 🔥 buscar status no banco
+        // Buscar status no banco
         if (donationIds.length > 0) {
           const { data } = await supabase
             .from("donations")
@@ -355,16 +545,63 @@ function Chat() {
     if (chatId) loadChat()
   }, [chatId, navigate])
 
+  useEffect(() => {
+    if (!chatId) return;
+
+    const channel = supabase
+      .channel("messages-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          console.log("REALTIME MSG:", payload.new);
+          const newMessage = payload.new;
+
+          // NOVO TRECHO (AQUI)
+          const parsed = parseDonationMessage(newMessage.message_text);
+
+          if (parsed?.donationId) {
+            setDonationStatusMap(prev => ({
+              ...prev,
+              [parsed.donationId]: "pendente"
+            }));
+          }
+
+          // JÁ EXISTENTE
+          setMessages(prev => {
+            const exists = prev.some(m => m.id === newMessage.id);
+            if (exists) return prev;
+            return [...prev, newMessage];
+          });
+        }
+      )
+      .subscribe((status) => {
+        console.log("STATUS MESSAGE:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId]);
+
   async function handleSend() {
     if (!text.trim() || !user) return
+    if (isChatBlocked) {
+      alert("🚫 Este usuário não aceita mensagens ou está bloqueado.");
+      return;
+    }
     await sendMessage(chatId, user.id, text)
-    setMessages(prev => [...prev, { id: Date.now(), sender_id: user.id, message_text: text, created_at: new Date().toISOString() }])
+    await reloadDonations();
     setText("")
   }
 
   if (loading) return <div className="loading-screen">Carregando chat...</div>
   if (!otherUser) return <div className="loading-screen">Carregando usuário...</div>
-  
   return (
     <div className={`chat-container-master ${isModalOpen ? "blur-content" : ""}`}>
       <div className="chat-page">
@@ -399,7 +636,7 @@ function Chat() {
                 <div className="message-wrapper">
                   <div className={`message ${msg.sender_id === user?.id ? "sent" : "received"}`}>
                     <div className="message-text">
-                      {renderMessage(msg, user, updateDonationStatus, handleNaoRecebi)}
+                      {renderMessage(msg)}
                     </div>
 
                     <div className="message-time">
@@ -427,27 +664,37 @@ function Chat() {
         <div className="chat-input-container">
           <div className="chat-input-box">
             
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Digite uma mensagem..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
+            {isChatBlocked && (
+              <div className="chat-blocked-warning">
+                🚫 Você não pode interagir com este usuário
+              </div>
+            )}
+            {!isChatBlocked && (
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Digite uma mensagem..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+              )}
 
             <div className="chat-actions">
-              <button
-                className="btn-send"
-                onClick={handleSend}
-              >
-                ➤
-              </button>
+              {!isChatBlocked && (
+                <button
+                  className="btn-send"
+                  onClick={handleSend}
+                  disabled={isChatBlocked}
+                >
+                  ➤
+                </button>
+              )}
               
-              {user?.is_donor === true && otherUser?.is_donor === false && (
+              {user?.is_donor === true && otherUser?.is_donor === false && !isChatBlocked && (
                 <button
                   className="btn-agendar"
                   onClick={() => setIsModalOpen(true)}
@@ -472,13 +719,50 @@ function Chat() {
                 <div className="food-scroll">
                   {donationItems.map((food, index) => (
                     <div key={index} className="food-edit-row">
+
                       <div className="food-info">
-                        <span className="food-name">{food.item === "Outro" ? food.customItem : food.item}</span>
+                        <span className="food-name">
+                          {food.item === "Outro" ? food.customItem : food.item}
+                        </span>
                       </div>
+
                       <div className="food-controls">
-                        <input type="number" className="input-qty" min="1" value={food.unit === "un" ? food.measureValue : food.quantity} onChange={(e) => handleUpdateQuantity(index, e.target.value)} />
+
+                        <button
+                          className="btn-remove-minus"
+                          onClick={() => handleRemoveItem(index)                          }
+                        >
+                          −
+                        </button>
+
+                        <input
+                          type="number"
+                          className="input-qty"
+                          min="1"
+                          value={getDisplayQuantity(food)}
+                          onChange={(e) => {
+                            // Deixa digitar livre (string)
+                            handleUpdateQuantity(index, e.target.value);
+                          }}
+
+                          onBlur={(e) => {
+                            let value = Number(e.target.value);
+
+                            const maxQty = originalItems[index]?.unit === "un"
+                              ? Number(originalItems[index]?.measureValue || 0)
+                              : Number(originalItems[index]?.quantity || 1);
+
+                            // mínimo
+                            if (!value || value < 1) value = 1;
+
+                            // máximo
+                            if (value > maxQty) value = maxQty;
+
+                            handleUpdateQuantity(index, value);
+                          }}
+                        />
+
                         <span className="unit-label">un</span>
-                        <button className="btn-remove-minus" onClick={() => handleRemoveItem(index)}>−</button>
                       </div>
                     </div>
                   ))}
@@ -491,7 +775,7 @@ function Chat() {
             </div>
 
             <div className="modal-footer">
-              {/* --- BOTÃO CORRIGIDO AQUI: CHAMA handleConfirmAgendamento --- */}
+              {/* ---  Chama handleConfirmAgendamento --- */}
               <button 
                 className="btn-enviar-proposta"
                 onClick={handleConfirmAgendamento}

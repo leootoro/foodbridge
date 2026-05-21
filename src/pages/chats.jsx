@@ -27,8 +27,11 @@ function Chats() {
   const navigate = useNavigate()
   const [chats, setChats] = useState([])
   const [currentUser, setCurrentUser] = useState(null)
+  const [blockedMap, setBlockedMap] = useState({});
+  
 
   // Função para deletar (esconder) a conversa
+  const [menuOpen, setMenuOpen] = useState(false);
   const handleDeleteChat = async (e, chat) => {
     e.stopPropagation();
 
@@ -49,9 +52,24 @@ function Chats() {
       const user = data.user
       if (!user) return
       setCurrentUser(user)
+      const { data: blockedData } = await supabase
+        .from("blocked_users")
+        .select("*")
+        .or(`user_id.eq.${user.id},blocked_user_id.eq.${user.id}`);
 
+      const blockedMapTemp = {};
+
+      blockedData.forEach(b => {
+        if (b.user_id === user.id) {
+          blockedMapTemp[b.blocked_user_id] = true;
+        }
+        if (b.blocked_user_id === user.id) {
+          blockedMapTemp[b.user_id] = true;
+        }
+      });
+
+      setBlockedMap(blockedMapTemp);
       const chatsData = await getUserChats(user.id)
-
       const formattedChats = await Promise.all(
         chatsData
           // 🔥 FILTRO: Só mostra se o usuário logado não tiver marcado como deletado
@@ -69,8 +87,9 @@ function Chats() {
             const lastMessage = await getLastMessage(chat.id)
 
             return {
-              ...chat, // Mantemos os dados originais (user_1_id, etc) para o delete
+              ...chat, // Mantive os dados originais (user_1_id, etc) para o delete
               name: name || "Usuário",
+              otherUserId,
               message: lastMessage?.message_text || "Sem mensagens",
               lastDate: lastMessage?.created_at || null,
               other_profile,
@@ -88,54 +107,104 @@ function Chats() {
 
   return (
     <div className="chat-container">
-      <aside className="sidebar">
+      
+      <div className={`sidebar-chat ${menuOpen ? "open" : ""}`}>
+        <button className="close-sidebar-btn" onClick={() => setMenuOpen(false)}>
+          ✕
+        </button>
+
         <h2 className="logo">FoodBridge</h2>
         <nav>
           <ul>
             <li onClick={() => navigate("/profile")}>Perfil</li>
-            <li onClick={() => navigate("/search")}>Procurar 🔎</li>
+            <li onClick={() => navigate("/search")}>Procurar</li>
             <li className="active" onClick={() => navigate("/chats")}>Conversas</li>
             <li onClick={() => navigate("/map")}>Mapa</li>
             <li className="button_map" onClick={() => navigate("/donation-history")}>
                   Histórico de Doações
               </li>
+            <li className="button_map" onClick={() => navigate("/ranking")}>
+                 Ranking de Doadores
+            </li>
             <li onClick={() => navigate("/config")}>Configurações</li>
             <li className="button_sair" onClick={() => navigate("/")}>Sair</li>
             
           </ul>
         </nav>
-      </aside>
+      </div>
+
+       {/* OVERLAY */}
+      {menuOpen && (
+        <div
+          className="overlay"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
 
       <div className="chat-content">
         <div className="chat-header">
-          <h2>Conversas</h2>
-        </div>
+          <button
+            className="menu-btn"
+            onClick={() => setMenuOpen(true)}
+          >
+            ☰
+          </button>
 
+          <h2>Chats</h2>
+        </div>
         <div className="chat-list">
-          {chats.map((chat) => (
-            <div key={chat.id} className="chat-item" onClick={() => navigate(`/chat/${chat.id}`)}>
-              <img
-                src={chat.other_profile?.photo_url ? get_profile_photo_Url(chat.other_profile.photo_url) : "/default_user.png"}
-                alt="avatar"
-                style={avatarStyle}
-              />
-              <div className="chat-info">
-                <div className="chat-top">
-                  <span className="chat-name">{chat.name}</span>
-                  <span className="chat-time">{formatDate(chat.lastDate)}</span>
-                </div>
-                <div className="chat-bottom">
-                  <span className="chat-message">{chat.message}</span>
-                  <div className="chat-actions">
-                    {chat.unread && <span className="chat-unread"></span>}
-                    <button className="btn-delete-chat" onClick={(e) => handleDeleteChat(e, chat)}>
-                      🗑️
-                    </button>
+          {chats.map((chat) => {
+            const isBlockedUser = blockedMap[chat.otherUserId];
+            const doesNotAcceptChat = chat.other_profile?.allow_chat_requests === false;
+
+            const blocked = isBlockedUser || doesNotAcceptChat;
+            return (
+              <div
+                key={chat.id}
+                className={`chat-item ${blocked ? "blocked" : ""}`}
+                onClick={() => {
+                  if (blocked) return;
+                  navigate(`/chat/${chat.id}`);
+                }}
+              >
+                <img
+                  src={
+                    chat.other_profile?.photo_url
+                      ? get_profile_photo_Url(chat.other_profile.photo_url)
+                      : "/default_user.png"
+                  }
+                  alt="avatar"
+                  style={avatarStyle}
+                />
+
+                <div className="chat-info">
+                  <div className="chat-top">
+                    <span className="chat-name">{chat.name}</span>
+                    <span className="chat-time">
+                      {formatDate(chat.lastDate)}
+                    </span>
+                  </div>
+
+                  <div className="chat-bottom">
+                    <span className="chat-message">
+                      {chat.message}
+                    </span>
+
+                    <div className="chat-actions">
+                      {chat.unread && <span className="chat-unread"></span>}
+
+                      <button
+                        className="btn-delete-chat"
+                        onClick={(e) => handleDeleteChat(e, chat)}
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

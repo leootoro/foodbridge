@@ -4,7 +4,8 @@ import './css/profile.css';
 import "leaflet/dist/leaflet.css"
 // import "./css/chatPages";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import UpdatePassword from "./pages/UpdatePassword";
 import Profile from  "./pages/Profile";
 import CreatePost from './pages/CreatePost';
 import EditProfile from './pages/Profile_edition';
@@ -14,6 +15,7 @@ import MapPage from './pages/MapPage';
 import ConfigPage from  './pages/ConfigPage';
 import SearchPage from "./pages/SearchPage"
 import DonationHistory from "./pages/DonationHistory";
+import Ranking from "./pages/Ranking";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -26,7 +28,8 @@ function AppContent() {
     // o que resolve o problema da tela branca vinda do mapa.
     <Routes key={location.pathname}>
       <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/update-password" element={<UpdatePassword />}/>
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>}/>
       <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>}/>
       <Route path="/create-post" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
@@ -37,6 +40,7 @@ function AppContent() {
       <Route path="/config" element={<ProtectedRoute><ConfigPage /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
       <Route path="/donation-history" element={<ProtectedRoute><DonationHistory /></ProtectedRoute>} />
+      <Route path="/ranking" element={<ProtectedRoute><Ranking /></ProtectedRoute>} />
     </Routes>
   );
 }

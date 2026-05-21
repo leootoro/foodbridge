@@ -1,11 +1,16 @@
 import {supabase} from "../lib/supabase";
 
-//Login com Google
 export async function loginComGoogle() {
+
+  const redirectUrl = `${window.location.origin}/profile`;
+  await supabase.auth.signOut();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'http://localhost:5173/profile' // URL do seu site
+      queryParams: {
+        prompt: 'consent select_account'
+      },
+      redirectTo: redirectUrl
     }
   });
 
@@ -13,32 +18,41 @@ export async function loginComGoogle() {
   return { success: true, data };
 }
 
-// cadastro
 export async function signup(email, password, name, userType) {
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name },
-        userType: {userType}
+        data: { 
+          name,
+          userType
+        }
       }
     });
 
     if (error) {
-      // Verifica se o erro do Supabase é de duplicidade (geralmente contém a palavra 'unique')
-      if (error.message.includes('unique constraint') || error.message.includes('already exists')) {
-        throw new Error('Este nome de usuário já está sendo utilizado. Por favor, escolha outro.');
+      if (
+        error.message.includes('unique constraint') ||
+        error.message.includes('already exists') ||
+        error.message.includes('already registered')
+      ) {
+        return { success: false, error: 'Este nome de usuário já está sendo utilizado.' };
       }
-      throw error;
+
+      return { success: false, error: error.message };
     }
-    return { success: true, user: data.user };
+
+    return {
+      success: true,
+      user: data.user,
+      session: data.session
+    };
 
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
-
 
 // login
 export async function login(email, password) {
@@ -48,7 +62,13 @@ export async function login(email, password) {
       password
     });
 
-    if (error) throw error;
+    if (error) {
+      if (error.message === "Invalid login credentials") {
+        return { success: false, error: "Email ou senha incorretos" };
+      }
+
+      return { success: false, error: "Erro ao fazer login" };
+    }
 
     return { success: true, user: data.user };
 
@@ -87,4 +107,16 @@ export async function checkNameExists(name) {
     console.error("Erro ao verificar nome:", error.message);
     return false;
   }
+}
+
+export async function resetPassword(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'http://localhost:5173/update-password' // página pra redefinir senha
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 }

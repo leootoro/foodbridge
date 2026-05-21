@@ -7,10 +7,13 @@ import { getCurrentUser } from "../services/authService";
 import { getOrCreateChat } from "../services/chatService"
 import { calcRating } from "../services/ratingService";
 import { supabase } from "../lib/supabase";
+import BackButton from "../components/BackButton";
 import RatingModal from "../components/RatingModal";
 import { FaStar } from "react-icons/fa";
+import CompleteProfileModal from "../components/CompleteProfileModal";
 import { MapContainer, TileLayer, Marker, Circle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+
 
 function getDisplayLocation(profile) {
   if (profile.show_exact_location) {
@@ -18,7 +21,7 @@ function getDisplayLocation(profile) {
   }
   // Cria um deslocamento pseudo-aleatório fixo baseado no ID
   const seed = profile.id.charCodeAt(0); 
-  const offset = 0.0015; // Aproximadamente 150-200 metros
+  const offset = 0.0035; 
   const randomLat = profile.lat + ((seed % 10) - 5) * (offset / 10);
   const randomLng = profile.lng + ((seed % 7) - 3) * (offset / 10);
 
@@ -72,11 +75,16 @@ function Profile() {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
-  // Adicione um novo estado para o modo de edição
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showModalCompleteInfo, setshowModalCompleteInfo] = useState(false);
+  const [alreadyRated, setAlreadyRated] = useState(false);
+  const [blockedMap, setBlockedMap] = useState({});
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const position = profile?.lat && profile?.lng ? getDisplayLocation(profile) : null;
+  
 
   const handleMapClick = () => {
     if (profile?.lat && profile?.lng) {
@@ -113,7 +121,31 @@ function Profile() {
       alert("Erro ao atualizar legenda.");
     }
   };
-  // 🔹 carregar dados
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      const currentUser = data.user;
+
+      if (!currentUser) return;
+
+      setUser(currentUser);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name, is_donor")
+        .eq("id", currentUser.id)
+        .single();
+
+      // Verifica se está incompleto
+      if (!profile?.name || profile?.is_donor == null) {
+        setshowModalCompleteInfo(true);
+      }
+    }
+    loadUser();
+  }, [])
+
+  //  Carregar dados
   useEffect(() => {
 
     async function loadData() {
@@ -128,11 +160,21 @@ function Profile() {
 
       if (!idToLoad) return;
 
-      // 🔹 1. busca profile
+      //  1. busca profile
       const profileData = await get_Profile(idToLoad);
 
+      const { data: existingRating } = await supabase
+        .from("rating")
+        .select("id")
+        .eq("reviewer_id", currentUser.id)
+        .eq("reviewed_id", idToLoad)
+        .maybeSingle();
 
-      // 🔹 2. busca ratings
+      if (existingRating) {
+        setAlreadyRated(true);
+      }
+
+      //  2. busca ratings
       const { data: ratingsData } = await supabase
         .from("rating")
         .select("rating_number")
@@ -142,7 +184,7 @@ function Profile() {
 
       const { avg, count } = calcRating(numbers);
 
-      // 🔹 3. seta profile com rating
+      //  3. seta profile com rating
       setProfile({
         ...profileData,
         avgRating: avg,
@@ -170,34 +212,6 @@ function Profile() {
     return () => clearInterval(interval);
   }, [user]);
 
-  // 🔹 online/offline (SÓ PARA DONO)
-  useEffect(() => {
-    if (!user) return
-
-    // só atualiza se for o próprio perfil
-    if (userId && userId !== user.id) return
-
-    const setOnline = async () => {
-      await updateProfile(user.id, {
-        is_online: true,
-        last_seen: new Date().toISOString()
-      })
-    }
-
-    const setOffline = async () => {
-      await updateProfile(user.id, { is_online: false })
-    }
-
-    setOnline()
-
-    window.addEventListener("beforeunload", setOffline)
-
-    return () => {
-      setOffline()
-      window.removeEventListener("beforeunload", setOffline)
-    }
-  }, [user, userId])
-
   const isOnline = (lastSeen) => {
     if (!lastSeen) return false;
 
@@ -205,7 +219,7 @@ function Profile() {
     return diff < 2 * 60 * 1000; // 2 minutos
   };
 
-  // 🔹 dono ou não
+  // dono ou não
   const isOwner = user?.id === (userId || user?.id)
 
   function handleFileSelected(event) {
@@ -230,135 +244,183 @@ function Profile() {
   }
 
   return (
+    <>
+    {showModalCompleteInfo && (
+      <CompleteProfileModal
+        user={user}
+        onClose={() => setshowModalCompleteInfo(false)}
+      />
+    )}
     <div className="profile-page">
 
       {isOwner && (
-        // {/* SIDEBAR */}
-        <aside className="sidebar">
-          <h2 className="logo">FoodBridge</h2>
+        <>
+          {/* SIDEBAR */}
+          <div className={`sidebar ${menuOpen ? "open" : ""}`}>
+            <button
+              className="close-sidebar-btn"
+              onClick={() => setMenuOpen(false)}
+            >
+              ✕
+            </button>
 
-          <nav>
-            <ul>
-              <li className="active">Perfil</li>
-               <li className="button_busca" onClick={() => navigate("/search")}>
-                 Procurar 🔎
-              </li>
-              <li className="button_conversas" onClick={() => navigate("/chats")}>
+            <h2 className="logo">FoodBridge</h2>
+
+            <nav>
+              <ul>
+                <li className="active">Perfil</li>
+
+                <li onClick={() => navigate("/search")}>
+                  Procurar
+                </li>
+
+                <li onClick={() => navigate("/chats")}>
                   Conversas
-              </li>
-              <li className="button_map" onClick={() => navigate("/map")}>
+                </li>
+
+                <li onClick={() => navigate("/map", { replace: true })}>
                   Mapa
-              </li>
-              <li className="button_map" onClick={() => navigate("/donation-history")}>
+                </li>
+
+                <li onClick={() => navigate("/donation-history")}>
                   Histórico de Doações
-              </li>
-              <li className="button_config" onClick={() => navigate("/config")}>
+                </li>
+
+                <li onClick={() => navigate("/ranking")}>
+                  Ranking de Doadores
+                </li>
+
+                <li onClick={() => navigate("/config")}>
                   Configurações
-              </li>
-              <li className="button_sair" onClick={() => navigate("/")}>
+                </li>
+
+                <li onClick={() => navigate("/")}>
                   Sair
-              </li>
-            </ul>
-          </nav>
-        </aside>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
+          {/* OVERLAY */}
+          {menuOpen && (
+            <div
+              className="overlay"
+              onClick={() => setMenuOpen(false)}
+            />
+          )}
+        </>
       )}
 
       {/* CONTEÚDO */}
       <main className="profile-content">
 
+        <div className="profile-back-wrapper">
+          <BackButton />
+        </div>
         {/* HEADER */}
         <section className="profile-header">
-          <div className="profile-photo">
-            {!isOwner && (
-              <button className="back-btn-overlay" onClick={() => navigate(-1)}>
-                ←
-              </button>
-            )}
-            <img
+
+            <button
+              className="menu-btn"
+              onClick={() => setMenuOpen(true)}
+            >
+              ☰
+            </button>
+
+            {/* FOTO */}
+            <div className="profile-photo">
+
+              <img
               src={
-                profile?.photo_url
+                  profile?.photo_url
                   ? get_profile_photo_Url(profile.photo_url)
                   : "/default_user.png"
               }
               alt="profile"
-            />
-            <div
-              className="profile-rating-inline"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowModal(true);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <FaStar className="star-icon" />
-
-              <span>
-                {profile?.avgRating > 0 ? profile.avgRating : "Novo"}
-              </span>
-            </div>
-
-            {/* 🔥 MODAL FORA */}
-            {showModal && profile && (
-              <RatingModal
-                profileId={profile.id}
-                onClose={() => setShowModal(false)}
               />
-            )}
-            </div>
+            </div> {/* ✅ FECHOU A FOTO CORRETAMENTE */}
 
-          <div className="profile-info">
-            <div className="name-row">
-              <h2>{profile?.name}</h2>
-              <div className={`status-dot ${isOnline(profile?.last_seen) ? "online" : "offline"}`} />
-            </div>
-            <p className="location">📍{show_location(profile)}</p>
+            {/* CONTEÚDO */}
+            <div className="profile-main">
 
-            <p className="bio">{profile?.bio}</p>
+                <div className="top-row">
 
-            <div className="profile-buttons">
+                <div className="name-row">
+                    <h2>{profile?.name}</h2>
+                     {!isOwner && ( 
+                        <div className={`status-circle ${isOnline(profile?.last_seen) ? "online" : "offline"}`} />
+                     )}
+                </div>
 
-              {/* 🔥 botão editar só para dono */}
-              {isOwner && (
-                <button
-                  className="btn-primary-profile"
-                  onClick={() => navigate("/edit-profile")}
-                >
-                  Editar Perfil
-                </button>
-              )}
+                <div className="profile-stats">
 
-              {/* 🔥 nova postagem só para dono */}
-              {isOwner && (
-                <label className="btn-secondary-profile">
-                  Nova Postagem
-                  <input
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={handleFileSelected_post}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
+                    <div 
+                    className="stat-item clickable"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowModal(true);
+                    }}
+                    >
+                    ⭐ <span>{profile?.ratingCount >= 3 ? profile?.avgRating : "Novo"}</span>
+                    </div>
 
-              {/* 🔥 botão conversar se for outro */}
-              {!isOwner && (
-                <button
-                className="btn-primary-profile"
-                onClick={async () => {
-                  if (!user || !profile) return
+                    {profile?.is_donor == true && (
+                      <div
+                      className={`stat-item ${isOwner ? "clickable" : ""}`}
+                      onClick={() => isOwner && navigate("/donation-history")}
+                      >
+                      🏆 {profile?.points || 0} pts
+                      </div>
+                    )}
 
-                  const chat = await getOrCreateChat(user.id, profile.id)
+                </div>
+                </div>
 
-                  navigate(`/chat/${chat.id}`)
-                }}
-              >
-                Conversar
-              </button>
-              )}
+                <p className="location">📍{show_location(profile)}</p>
 
-            </div>
+                <p className="bio">{profile?.bio}</p>
 
-          </div>
+                {/* BOTÕES */}
+                <div className="profile-buttons">
+
+                {isOwner && (
+                    <button
+                    className="btn-primary-profile"
+                    onClick={() => navigate("/edit-profile")}
+                    >
+                    Editar Perfil
+                    </button>
+                )}
+
+                {isOwner && (
+                    <label className="btn-secondary-profile">
+                    Nova Postagem
+                    <input
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={handleFileSelected_post}
+                        style={{ display: "none" }}
+                    />
+                    </label>
+                )}
+
+                {!isOwner && (
+                    <button
+                    className="btn-primary-profile"
+                    onClick={async () => {
+                        if (!user || !profile) return;
+
+                        const chat = await getOrCreateChat(user.id, profile.id);
+                        navigate(`/chat/${chat.id}`);
+                    }}
+                    >
+                    Conversar
+                    </button>
+                )}
+
+                </div>
+
+            </div> {/*  FECHOU profile-main */}
 
         </section>
 
@@ -407,15 +469,20 @@ function Profile() {
                 Restrição de alimentos
                 <span className="help" title = 'Alimentos não recebidos pela instituição'>?</span>
               </div>
-
-              <div className="restriction-tags">
-                {profile?.food_restrictions
-                  ?.split(",")
-                  .map((item, index) => (
+              
+              <div className="restriction-tags-container">
+                <div className="restriction-tags">
+                  {[...new Set(
+                    (profile?.food_restrictions || "")
+                      .split(",")
+                      .map(item => item.trim().toLowerCase()) // normaliza
+                      .filter(item => item !== "") // remove vazios
+                  )].map((item, index) => (
                     <span key={index} className="tag">
-                      {item.trim()}
+                      {item}
                     </span>
                   ))}
+                </div>
               </div>
 
             </div>
@@ -487,7 +554,7 @@ function Profile() {
                       {/* Lado Direito: Badge com a Quantidade Final */}
                       <span className="food-badge">
                         {/* Se a unidade for 'un', o badge mostra o valor da medida. 
-                            Se for kg/ml, o badge mostra a quantidade de unidades (ex: 5 un) */}
+                            Se for kg/ml/..., o badge mostra a quantidade de unidades (ex: 5 un) */}
                         {food.unit === "un" 
                           ? `${food.measureValue || 0} UN` 
                           : `${food.quantity || 1} UN`
@@ -559,7 +626,9 @@ function Profile() {
           </div>
 
         </section>
-
+      </main>
+    </div>
+    <div className="gallery-full">
         {/* GALERIA */}
         <section className="gallery">
 
@@ -584,7 +653,7 @@ function Profile() {
                 return (
                   <div key={post.id} className="video-thumbnail-container" onClick={() => setSelectedPost(post)}>
                     <video src={url} />
-                    <div className="video-play-icon">▶</div> {/* Ícone visual opcional */}
+                    <div className="video-play-icon">▶</div> 
                   </div>
                 );
               }
@@ -629,9 +698,16 @@ function Profile() {
           )}
         </section>
 
-      </main>
-
     </div>
+    {/* MODAL */}
+    {showModal && profile && (
+    <RatingModal
+        profileId={profile.id}
+        onClose={() => setShowModal(false)}
+        setProfile={setProfile}
+    />
+    )}
+    </>
   )
 }
 

@@ -2,7 +2,7 @@ import { supabase } from "../lib/supabase"
 
 export async function getBlockedIds(currentUserId) {
   try {
-    // 1. Buscar quem EU bloqueei
+    // 1. Buscar quem eu bloqueei
     const { data: myBlocks } = await supabase
       .from("blocked_users")
       .select("blocked_user_id")
@@ -26,9 +26,9 @@ export async function getBlockedIds(currentUserId) {
   }
 }
 
-/**
- * Função para bloquear um usuário
- */
+
+//  Função para bloquear um usuário
+ 
 export async function blockUser(myId, targetId) {
   const { error } = await supabase
     .from("blocked_users")

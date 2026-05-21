@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase"
 
-// 🔹 Buscar chats do usuário
+// Buscar chats do usuário
 export async function getUserChats(userId) {
 
   const { data: chats, error } = await supabase
@@ -14,7 +14,7 @@ export async function getUserChats(userId) {
 }
 
 
-// 🔹 Buscar última mensagem de um chat
+// Buscar última mensagem de um chat
 export async function getLastMessage(chatId) {
 
   const { data, error } = await supabase
@@ -31,7 +31,7 @@ export async function getLastMessage(chatId) {
 }
 
 
-// 🔹 Buscar nome do outro usuário
+//Buscar nome do outro usuário
 export async function getUserName(userId) {
 
   const { data, error } = await supabase
@@ -45,7 +45,7 @@ export async function getUserName(userId) {
   return data?.name
 }
 
-// 🔹 pegar chat por id
+// Pegar chat por id
 export async function getChatById(chatId) {
   const { data, error } = await supabase
     .from("chats")
@@ -57,20 +57,20 @@ export async function getChatById(chatId) {
   return data
 }
 
-// 🔹 pegar mensagens
+// Pegar mensagens
 export async function getMessages(chatId) {
   const { data, error } = await supabase
     .from("messages")
     .select("*")
     .eq("chat_id", chatId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(20)
 
   if (error) throw error
-  return data
+  return data.reverse()
 }
 
-// 🔹 enviar mensagem
+// Enviar mensagem
 export async function sendMessage(chatId, senderId, text) {
   const { error } = await supabase
     .from("messages")
@@ -88,7 +88,7 @@ export async function getOrCreateChat(userId, otherUserId) {
   const u1 = userId < otherUserId ? userId : otherUserId;
   const u2 = userId < otherUserId ? otherUserId : userId;
 
-  // 1. 🔎 Tenta buscar a conversa existente
+  // 1.  Tenta buscar a conversa existente
   const { data: existing } = await supabase
     .from("chats")
     .select("*")
@@ -114,7 +114,7 @@ export async function getOrCreateChat(userId, otherUserId) {
     return existing;
   }
 
-  // 2. 🔥 Se não existe, tenta criar
+  // 2. Se não existe, tenta criar
   const { data, error } = await supabase
     .from("chats")
     .insert([
@@ -128,7 +128,7 @@ export async function getOrCreateChat(userId, otherUserId) {
     .select()
     .maybeSingle();
 
-  // 3. 💥 Tratamento de erro para Race Condition (dois usuários clicando ao mesmo tempo)
+  // 3.  Tratamento de erro para Race Condition (dois usuários clicando ao mesmo tempo)
   if (error && (error.code === "23505" || error.message?.includes("duplicate"))) {
     const { data: retry } = await supabase
       .from("chats")
@@ -163,7 +163,7 @@ export async function DeleteChat(chatId, userId, chatData) {
 
     if (error) throw error;
 
-    // 2. Opcional: Se AMBOS deletaram, aí sim removemos do banco permanentemente
+    // 2.Se AMBOS deletaram, aí sim removemos do banco permanentemente
     if (data.deleted_by_user_1 && data.deleted_by_user_2) {
       await supabase.from("chats").delete().eq("id", chatId);
     }

@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabase";
-import { getLatLng } from "./geocode"
 
 export async function get_Profile(userId) {
 
@@ -41,37 +40,4 @@ export async function updateDonationSettings(userId, settings) {
   if (error) throw error;
 
   return data;
-}
-
-export async function save_lat_and_long(userId, profile) {
-
-  const addressParts = [
-    profile.address,
-    profile.address_number,
-    profile.neighborhood,
-    profile.city,
-    profile.state
-  ]
-  const fullAddress = addressParts
-    .filter(Boolean)
-    .join(", ")
-
-  const coords = await getLatLng(fullAddress)
-  if (!coords) {
-    return
-  }
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      lat: coords.lat,
-      lng: coords.lng
-    })
-    .eq("id", userId)
-
-  if (error) {
-    console.error("❌ Erro ao salvar lat/lng:", error)
-  } else {
-    console.log("✅ Coordenadas salvas com sucesso!")
-  }
 }

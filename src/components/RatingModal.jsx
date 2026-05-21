@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { createPortal } from "react-dom";
 import { FaStar } from "react-icons/fa";
+import { calcRating } from "../services/ratingService";
+import "../css/RatingModal.css"
 
-function RatingModal({ profileId, onClose }) {
+function RatingModal({ profileId, onClose , setProfile}) {
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isReviewing, setIsReviewing] = useState(false);
@@ -10,6 +13,8 @@ function RatingModal({ profileId, onClose }) {
   const [rating, setRating] = useState(0);
   const [text, setText] = useState("");
   const [userId, setUserId] = useState(null);
+  const [alreadyRated, setAlreadyRated] = useState(false);
+  const [myRatingId, setMyRatingId] = useState(null);
 
   useEffect(() => {
     async function loadUser() {
@@ -21,14 +26,67 @@ function RatingModal({ profileId, onClose }) {
   }, []);
 
   useEffect(() => {
+      async function checkRating() {
+        const { data: { user } } = await supabase.auth.getUser();
+  
+        const { data } = await supabase
+          .from("rating")
+          .select("id")
+          .eq("reviewer_id", user.id)
+          .eq("reviewed_id", profileId)
+          .maybeSingle();
+  
+        if (data) {
+          setAlreadyRated(true);
+          setMyRatingId(data.id);
+        }
+      }
+  
+      checkRating();
+    }, []);
+  
+  async function handleDeleteRating(ratingId) {
+    const confirmDelete = window.confirm("Deseja excluir sua avaliação?");
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+        .from("rating")
+        .delete()
+        .eq("id", ratingId);
+
+    if (!error) {
+        alert("Avaliação removida!");
+
+        // Usa callback correto (evita estado antigo)
+        setRatings(prev => {
+        const updated = prev.filter(r => r.id !== ratingId);
+
+        const numbers = updated.map(r => r.rating_number);
+
+        const { avg, count } = calcRating(numbers);
+
+        setProfile(prevProfile => ({
+            ...prevProfile,
+            avgRating: avg,
+            ratingCount: count
+        }));
+
+        return updated;
+        });
+
+        setAlreadyRated(false);
+        setMyRatingId(null);
+    }
+  }
+  useEffect(() => {
     async function loadRatings() {
       const { data } = await supabase
         .from("rating")
-        .select("*")
+        .select("id, reviewer_id, rating_number, comment")
         .eq("reviewed_id", profileId);
 
-      // 🔥 pega nomes dos usuários
-      const usersIds = data.map(r => r.reviewer_id);
+      // Pega nomes dos usuários
+      const usersIds = data.map(r => r?.reviewer_id);
 
       const { data: users } = await supabase
         .from("profiles")
@@ -36,7 +94,7 @@ function RatingModal({ profileId, onClose }) {
         .in("id", usersIds);
 
       const usersMap = {};
-      users.forEach(u => (usersMap[u.id] = u.name));
+      users.forEach(u => (usersMap[u.id] = u?.name));
 
       const final = data.map(r => ({
         ...r,
@@ -46,7 +104,6 @@ function RatingModal({ profileId, onClose }) {
       setRatings(final);
       setLoading(false);
     }
-
     loadRatings();
   }, [profileId]);
 
@@ -59,7 +116,7 @@ function RatingModal({ profileId, onClose }) {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user.id;
 
-    // 🔥 verifica se já avaliou
+    // Verifica se já avaliou
     const { data: existing } = await supabase
     .from("rating")
     .select("id")
@@ -112,13 +169,25 @@ function RatingModal({ profileId, onClose }) {
             ) : (
                 ratings.map((r, i) => (
                 <div key={i} className="rating-item">
-                    <strong>{r.reviewer_name}</strong>
+                    <div className="rating-content">
+                        <strong>{r.reviewer_name}</strong>
 
-                    <div className="stars">
-                    {"★".repeat(Math.floor(r.rating_number))}
+                        <div className="stars">
+                        {"★".repeat(Math.floor(r.rating_number))}
+                        </div>
+
+                        <p>{r.message || "Sem comentário"}</p>
                     </div>
 
-                    <p>{r.message || "Sem comentário"}</p>
+                    {/* 🔥 SÓ MOSTRA SE FOR SUA */}
+                    {r.reviewer_id === userId  && (
+                        <button
+                            className="delete-rating-btn"
+                            onClick={() => handleDeleteRating(r.id)}
+                        >
+                            Excluir
+                        </button>
+                    )}
                 </div>
                 ))
             )}
@@ -128,7 +197,14 @@ function RatingModal({ profileId, onClose }) {
             <>
                 {/* BOTÃO AVALIAR */}
                 {!isReviewing &&(
-                <button onClick={() => setIsReviewing(true)}>
+                <button className="btn-rate" onClick={() =>{
+                 if (alreadyRated) {
+                    alert("Você já avaliou este usuário.");
+                    return;
+                 }
+                 setIsReviewing(true);  
+                }}              
+                 >
                     Avaliar
                 </button>
                 )}
@@ -137,10 +213,10 @@ function RatingModal({ profileId, onClose }) {
                 {isReviewing && (
                 <div className="review-box">
 
-                    {/* ⭐ ESTRELAS 0.5 */}
+                    {/* ESTRELAS 0.5 */}
                     <div className="star-input">
-                    {[...Array(10)].map((_, i) => {
-                        const value = (i + 1) / 2;
+                    {[...Array(5)].map((_, i) => {
+                        const value = i + 1;
 
                         return (
                         <FaStar
@@ -162,7 +238,7 @@ function RatingModal({ profileId, onClose }) {
                     onChange={(e) => setText(e.target.value)}
                     />
 
-                    <button onClick={handleSubmit}>
+                    <button className=" btn-send-rating" onClick={handleSubmit}>
                     Enviar
                     </button>
                 </div>

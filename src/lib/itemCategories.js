@@ -23,7 +23,10 @@ export const expandedMarketItems = [
   "margarina", "mel", "milho de pipoca", "molho de tomate", "mostarda", "óleo",
   "pão de forma", "pão francês", "papel higiênico", "peito de peru", "presunto", "queijo",
   "refrigerante", "requeijão", "sabão em pó", "sabão líquido", "sabonete", "sal", "salame",
-  "shampoo", "suco concentrado", "suco de caixa", "torrada", "vinagre", "vinho",
+  "shampoo", "suco concentrado", "suco de caixa", "torrada", "vinagre", "vinho", "Ração Seca Cães",
+  "Ração Úmida Sachê para gatos","ração úmida sachê para cachorro", "Ração Gatos", "Areia Sanitária", "Tapete Higiênico", "Shampoo Pet", "Condicionador Pet",
+  "Escova de Pelos", "Coleira", "Guia de Passeio", "Bebedouro", "Comedouro", "Brinquedos Mordedores", "Petiscos para gatos", "petiscos para cachorros",  "Vermífugo", "Antipulgas", "Caminha", "Caixa de Transporte", "Perfume Pet", "Sabonete", "Cortador de Unha", "Focinheira",
+   "Ração para Pássaros", "Ração para roedores",
 
   // 🔥 itens das categorias
   ...categoryMapping.frutas,

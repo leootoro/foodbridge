@@ -24,21 +24,23 @@ export const createDonation = async (donorId, institutionId, deliveryDate, items
   const itemsToInsert = items.map(item => {
     const name = item.item === "Outro" ? item.customItem : item.item;
 
+    const isUnit = item.unit === "un";
+
+    const quantity = isUnit
+      ? Number(item.measureValue || 0)  
+      : Number(item.quantity || 1);
+
     let volume = null;
 
-    if (item.unit !== "un" && item.measureValue) {
-      if (item.unit.toLowerCase().includes("l")) {
-        volume = `${item.measureValue}L`;
-      } else if (item.unit === "g") {
-        volume = `${item.measureValue}g`;
-      }
+    if (!isUnit && item.measureValue) {
+      volume = `${item.measureValue}${item.unit}`;
     }
 
     return {
       donation_id: donation.id,
       food_name: name,
-      quantity: item.quantity,
-      unit: "un",
+      quantity,
+      unit: "un", // continua "un" porque usamos UN como unidade final
       volume
     };
   });
@@ -49,12 +51,13 @@ export const createDonation = async (donorId, institutionId, deliveryDate, items
 
   if (itemsError) {
     console.error("ERRO ITENS:", itemsError.message, itemsError.details);
-    // Opcional: deletar a donation se os itens falharem (rollback manual)
+    //Deletar a donation se os itens falharem (rollback manual)
     await supabase.from("donations").delete().eq("id", donation.id);
     return { data: null, error: itemsError };
   }
 
   return { data: donation, error: null };
+  
 };
 
 export const updateDonationStatus = async (donationId, newStatus) => {
@@ -69,11 +72,18 @@ export const buildDonationMessage = (donationId, items, deliveryDate) => {
   const itensString = items
     .map(i => {
       const nome = i.item === "Outro" ? i.customItem : i.item;
-      const volume = i.measureValue && i.unit
+
+      const isUnit = i.unit === "un";
+
+      const quantity = isUnit
+        ? Number(i.measureValue || 0)
+        : Number(i.quantity || 1);
+
+      const volume = !isUnit && i.measureValue
         ? `${i.measureValue}${i.unit}`
         : "";
 
-      return `ITEM:${nome}:${i.quantity}:${volume}`;
+      return `ITEM:${nome}:${quantity}:${volume}`;
     })
     .join("\n");
 
@@ -89,11 +99,11 @@ export const parseDonationMessage = (messageText) => {
 
   const lines = messageText.split("\n").map(l => l.trim());
 
-  // ✅ pega o ID de forma segura
+  // Pega o ID de forma segura
   const idLine = lines.find(l => l.startsWith("PROPOSTA_DOACAO_ID:"));
   const donationId = idLine?.split(":")[1]?.trim();
 
-  // ✅ pega os itens
+  // Pega os itens
   const items = lines
     .filter(l => l.startsWith("ITEM:"))
     .map(l => {
@@ -102,7 +112,7 @@ export const parseDonationMessage = (messageText) => {
       const quantity = parts[2]?.trim();
       const volumeRaw = parts[3]?.trim();
 
-      // regra: se for unidade, NÃO é volume
+      // Regra: se for unidade, NÃO é volume
       let volume = null;
       let unit = "un";
 
@@ -122,7 +132,7 @@ export const parseDonationMessage = (messageText) => {
       };
     });
 
-  // ✅ pega a data
+  // Pega a data
   const dataLine = lines.find(l => l.startsWith("DATA_RETIRADA:"));
   const deliveryDate = dataLine
     ? dataLine.replace("DATA_RETIRADA:", "").trim()
@@ -166,6 +176,7 @@ export const getUserDonations = async (user, profile) => {
       id,
       created_at,
       status,
+      points, 
       delivery_date,
       donor_id,
       institution_id,
@@ -200,7 +211,7 @@ export const getUserDonations = async (user, profile) => {
     return { data: [], error };
   }
 
-  // 🔥 FORMATAR AQUI (IMPORTANTE)
+  // Formata
   const formatted = data.map(d => {
     const otherName = profile.is_donor
       ? d.institution?.name
@@ -209,6 +220,7 @@ export const getUserDonations = async (user, profile) => {
     return {
       ...d,
       otherName,
+      points: d.points ?? 0,
       items: d.donation_itens.map(i => ({
         name: i.food_name,
         quantity: i.quantity,

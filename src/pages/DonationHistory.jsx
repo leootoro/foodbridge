@@ -75,6 +75,55 @@ function DonationHistory() {
 
       <div className="history-page">
 
+        <div className="points-info">
+          <p>
+            ⭐ <strong>Sistema de Pontos</strong><br />
+            Você ganha pontos ao concluir doações com base nos critérios abaixo:
+          </p>
+
+          <ul>
+            <li>
+              <strong>📦 Base:</strong> 1 ponto por item doado
+            </li>
+
+            <li>
+              <strong>⏱ Frequência:</strong>
+              <ul>
+                <li>Até 7 dias: +30 pontos</li>
+                <li>Até 30 dias: +15 pontos</li>
+                <li>Acima de 30 dias: 0 pontos</li>
+              </ul>
+            </li>
+
+            <li>
+              <strong>🔥 Streak (sequência de doações dentro de 30 dias):</strong>
+              <ul>
+                <li>3 doações seguidas: +15 pontos</li>
+                <li>5 doações seguidas: +30 pontos</li>
+                <li>10+ doações seguidas: +40 pontos</li>
+              </ul>
+            </li>
+          </ul>
+
+          <p>
+            📦 Os pontos de cada doação podem ser visualizados nos cards de doações concluídas.
+          </p>
+
+          <hr />
+
+          <p>
+            🏆 <strong>Reconhecimento Anual</strong><br />
+            Ao final de cada ano, os <strong>3 maiores doadores</strong> receberão:
+          </p>
+
+          <ul>
+            <li>🏅 Selo de Assistência Social</li>
+            <li>📢 Divulgação nas nossas páginas</li>
+            <li>🚀 Divulgação gratuita do perfil</li>
+            <li>🌱 Créditos de carbono (em parceria com empresas apoiadoras)</li>
+          </ul>
+        </div>
+
         {/* TÍTULO */}
         {profile?.is_donor === true && (
           <h2>📦 Histórico de Doações feitas</h2>
@@ -106,9 +155,19 @@ function DonationHistory() {
                 </span>
               </div>
 
-              <div className="history-user">
-                👤 {donation.otherName || "Usuário"}
-              </div>
+              {profile?.is_donor === true && (
+                <div className="history-user">
+                  👤 Para:  {donation.otherName || "Usuário"}
+                </div>
+              )}
+
+              {profile?.is_donor === false && (
+                <div className="history-user">
+                  👤 De:  {donation.otherName || "Usuário"}
+                </div>
+              )}
+
+
 
               <div className="delivery">
                 📍 Retirada:{" "}
@@ -116,15 +175,20 @@ function DonationHistory() {
                   ? formatDate(donation.delivery_date)
                   : "Não definida"}
               </div>
+              {donation.status === "concluido" && (
+                <div className="points-badge">
+                  ⭐ {donation.points || 0} pts
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* 🔥 MODAL FORA DO MAP */}
+      {/* MODAL FORA DO MAP */}
       {selectedDonation && (
         <div
-          className="modal-overlay"
+          className="modal-overlay-history"
           onClick={() => setSelectedDonation(null)}
         >
           <div

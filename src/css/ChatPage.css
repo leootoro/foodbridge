@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100vw; /* Força a largura total da janela */
-  max-width: 100%; /* Remove qualquer trava anterior */
+  width: 100vw; 
+  max-width: 100%; 
   background: #ece5dd;
   margin: 0;
 }
@@ -23,6 +23,15 @@
 .chat-header h3 {
   margin: 0;
   font-size: 18px;
+}
+
+.chat-blocked-warning {
+  padding: 15px;
+  text-align: center;
+  background: #eee;
+  color: #666;
+  border-radius: 8px;
+  width: 100%;
 }
 
 .status {
@@ -50,7 +59,7 @@
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 5%; /* Padding lateral em % ajuda a manter o equilíbrio em telas gigantes */
+  padding: 20px 5%; 
   display: flex;
   flex-direction: column;
   background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Opcional: Wallpaper clássico */
@@ -60,18 +69,19 @@
 /* BOLHAS */
 
 .message {
-  max-width: 70%; /* Em telas grandes, 70% é um bom limite */
+  max-width: 70%; 
   padding: 12px 18px;
   font-size: 16px;
   margin-bottom: 8px;
   box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
-/* 👉 NA MENSAGEM ENVIADA (SENT) */
+ 
+/*  NA MENSAGEM ENVIADA (SENT) */
 .message.sent {
-  align-self: flex-end;    /* Empurra para a direita dentro do flex column */
-  margin-left: auto;       /* Reforço para navegadores antigos */
-  background: #dcf8c6;     /* Cor clássica de "enviado" (opcional) */
+  align-self: flex-end;   
+  margin-left: auto;     
+  background: #dcf8c6;    
   color: #333;
   border-bottom-right-radius: 4px;
 }
@@ -85,6 +95,7 @@
   margin-right: auto;
 }
 
+
 /* TEXTO */
 
 .message-text {
@@ -94,7 +105,6 @@
 }
 
 /* HORÁRIO */
-
 .message-time {
   font-size: 10px;
   margin-top: 4px;
@@ -184,7 +194,7 @@
 /* Responsividade para Telas Pequenas */
 @media (max-width: 768px) {
   .modal-content-chat {
-    grid-template-columns: 1fr; /* Vira uma coluna só no celular */
+    grid-template-columns: 1fr; 
   }
   .food-scroll {
     border-right: none;
@@ -204,8 +214,8 @@
 .donation-modal {
   background: white;
   width: 90%;
-  max-width: 850px; /* Largura ideal para caber as duas coisas */
-  max-height: 90vh; /* Se a tela for pequena, ele cria scroll interno */
+  max-width: 850px; 
+  max-height: 90vh; 
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -217,7 +227,7 @@
 /* O SEGREDO: Novo grid sem herdar CSS global sujo */
 .donation-layout-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Duas colunas exatamente iguais (50% / 50%) */
+  grid-template-columns: 1fr 1fr; 
   gap: 30px;
   margin-top: 20px;
   width: 100%;
@@ -232,10 +242,10 @@
 /* CONTEÚDO LADO A LADO - Resolvendo o corte lateral */
 .modal-content-chat {
   display: flex;
-  flex-direction: row; /* Força ficar lado a lado */
+  flex-direction: row;
   justify-content: center;
   align-items: flex-start;
-  gap: 40px; /* Espaço entre a lista e o calendário */
+  gap: 40px; 
   padding: 20px 10px;
   width: 100%;
 }
@@ -272,7 +282,7 @@
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Se o nome for gigante, ele coloca "..." */
+  text-overflow: ellipsis; 
 }
 
 .food-controls {
@@ -346,12 +356,12 @@
 }
 
 .btn-remove-minus {
-  background: #ff4d4d; /* Vermelho vibrante */
+  background: #ff4d4d; 
   color: white;
   border: none;
   width: 24px;
   height: 24px;
-  border-radius: 50%; /* Redondo */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -370,7 +380,7 @@
   font-size: 20px;
   font-weight: bold;
   line-height: 1;
-  margin-top: -2px; /* Ajuste fino para centralizar o traço */
+  margin-top: -2px; 
 }
 
 /* Coluna da Direita (Calendário) */
@@ -384,7 +394,7 @@
 
 /* Ajuste no DatePicker para não estourar */
 .react-datepicker {
-  transform: scale(1.05); /* Aumenta levemente o calendário para preencher o lado direito */
+  transform: scale(1.05); 
 }
 
 /* Centralizar o botão de confirmação embaixo das duas colunas */
@@ -396,7 +406,7 @@
 }
 /* Afasta o título do calendário */
 .calendar-section h3 {
-  margin-bottom: 25px; /* Aumente ou diminua esse valor conforme achar melhor */
+  margin-bottom: 25px; 
 }
 
 /* Caso queira que o título da outra coluna também fique alinhado */
@@ -484,6 +494,17 @@
   border: none;
   color: white;
   cursor: pointer;
+}
+
+.cancel-donation-btn{
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border-color: #333;
+  color: rgb(2, 2, 2);
+  cursor: pointer;
+  margin-top: 5px;
+  background-color:rgb(149, 146, 146);
 }
 
 .donation-btn.success {
@@ -618,4 +639,45 @@
 
 .btn-agendar:hover {
   background: #0f7a6c;
+}
+
+/* Celular */
+@media (max-width: 768px) {
+
+  .messages {
+    padding: 10px;
+  }
+
+  .message {
+    max-width: 85%;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .message-text {
+    font-size: 14px;
+  }
+
+  .chat-header {
+    height: 60px;
+    padding: 0 10px;
+  }
+
+  .chat-input-box {
+    width: 100%;
+    border-radius: 0;
+  }
+
+}
+/* tablet */
+@media (max-width: 1024px) {
+
+  .messages {
+    padding: 15px;
+  }
+
+  .message {
+    max-width: 75%;
+  }
+
 }

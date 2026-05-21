@@ -11,13 +11,14 @@ import { getBlockedIds } from "../services/blockService"
 import { filterProfiles } from "../components/profileFilter";
 import { categoryMapping } from '../lib/itemCategories';
 import ItemFilter from "../components/itemFilter";
+import ProfileFilters from "../components/FilterProfileUI";
 
 function getDisplayLocation(profile) {
   if (profile.show_exact_location) {
     return [profile.lat, profile.lng]
   }
 
-  const seed = profile.id.charCodeAt(0) // pseudo fixo
+  const seed = profile.id.charCodeAt(0) 
   const offset = 0.001
 
   const randomLat = profile.lat + ((seed % 10) - 5) * (offset / 10)
@@ -36,6 +37,7 @@ function MapPage() {
   const [itemSearch, setItemSearch] = useState("");
   const [itemSearchDonate, setItemSearchDonate] = useState("");
   const [useMyItems, setUseMyItems] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     type: "all",
@@ -43,7 +45,11 @@ function MapPage() {
     state: "",
     neighborhood: "",
     accept_donation: null,
-    pet_donation: null
+    pet_donation: null,
+    immediate_availability: null,
+    local_pickup: null,
+    addressType: "all",
+    minRating: 0
   })
 
   // Função separada que recebe o evento (e) e o ID do outro usuário
@@ -68,7 +74,7 @@ function MapPage() {
     setSelectedItemsToDonate([]);
   }, [filters.type]);
 
-  // 🔥 Carrega usuário
+  // Carrega usuário
   useEffect(() => {
     async function loadUser() {
       console.log("🔍 Carregando usuário...")
@@ -90,7 +96,7 @@ function MapPage() {
         return
       }
 
-      // 🔥 define tipo oposto
+      // Define tipo oposto
       setFilters(f => ({
         ...f,
         type: myProfile.is_donor ? "receiver" : "donor"
@@ -112,53 +118,56 @@ function MapPage() {
     selectedItemsToDonate
   ]);
 
-  // 🔍 Buscar profiles
+  useEffect(() => {
+      if (filters.addressType === "online") {
+        setFilters(f => ({ ...f, neighborhood: "" }));
+      }
+  }, [filters.addressType]);
+  // Buscar profiles
   async function loadData() {
-    if (!user || !myProfile) {
-      console.log("❌ Usuário ainda não carregado")
-      return
-    }
-    try{
-      const blockedIds = await getBlockedIds(user.id)
-      let query = supabase.from("profiles").select("*")
+    if (!user || !myProfile) return;
 
-      if (filters.type === "donor") {
-        query = query.eq("is_donor", true)
-      }
+    try {
+      const blockedIds = await getBlockedIds(user.id);
 
-      if (filters.type === "receiver") {
-        query = query.eq("is_donor", false)
-      }
+      // Busca profiles
+      const { data: profilesData, error } = await supabase
+        .from("profiles")
+        .select("*");
 
-      if (filters.city) {
-        query = query.ilike("city", `%${filters.city}%`)
-      }
+      if (error) throw error;
 
-      if (filters.state) {
-        query = query.ilike("state", `%${filters.state}%`)
-      }
+      // Busca ratings
+      const { data: allRatings } = await supabase
+        .from("rating")
+        .select("reviewed_id, rating_number");
 
-      if (filters.neighborhood) {
-        query = query.ilike("neighborhood", `%${filters.neighborhood}%`)
-      }
+      const ratingsMap = {};
 
-      if (filters.accept_donation !== null) {
-        query = query.eq("accept_donation", filters.accept_donation)
-      }
+      allRatings?.forEach(r => {
+        if (!ratingsMap[r.reviewed_id]) {
+          ratingsMap[r.reviewed_id] = [];
+        }
+        ratingsMap[r.reviewed_id].push(r.rating_number);
+      });
 
-      if (filters.pet_donation !== null) {
-        query = query.eq("pet_donation", filters.pet_donation)
-      }
+      // Adiciona avg e count
+      const profilesWithRating = profilesData.map(p => {
+        const userRatings = ratingsMap[p.id] || [];
+        const count = userRatings.length;
 
-      const { data, error } = await query;
+        let avg = 0;
+        if (count >= 3) {
+          const sum = userRatings.reduce((acc, curr) => acc + curr, 0);
+          avg = parseFloat((sum / count).toFixed(1));
+        }
 
-      if (error) {
-        console.error(error);
-        return;
-      }
+        return { ...p, avgRating: avg, ratingCount: count };
+      });
 
+      // 🔥 filtro único
       const filtered = filterProfiles({
-        profiles: data,
+        profiles: profilesWithRating,
         myProfile,
         filters,
         selectedItems,
@@ -170,212 +179,167 @@ function MapPage() {
       setProfiles(filtered);
 
     } catch (err) {
-      console.error('Erro ao carregar dados:', err);
+      console.error(err);
     }
   }
 
-  // 🔥 separa profiles válidos
-  const validProfiles = profiles.filter(p => p.lat && p.lng);
+  // Separa profiles válidos
+  const validProfiles = profiles.filter(
+    p => typeof p.lat === "number" && typeof p.lng === "number"
+  );
   const invalidProfiles = profiles.filter(p => !p.lat || !p.lng)
-
   return (
     <div className="map-page" style={{background:"white", height: "100vh", width: "100%" }}>
-
-      <div className="filters">
-        <select
-          value={filters.type}
-          onChange={(e) =>
-            setFilters(f => ({ ...f, type: e.target.value }))
-          }
+      <div className="map-header">
+        <BackButton marginRight = "-10" />
+        
+        <button 
+          className="open-filter-btn"
+          onClick={() => setIsFilterOpen(true)}
         >
-          <option value="all">Todos</option>
-          <option value="donor">Doadores</option>
-          <option value="receiver">Recebedores</option>
-        </select>
+          Filtrar
+        </button>
+      </div>
+      {isFilterOpen && (
+        <>
+          <div
+            className="filters-overlay"
+            onClick={() => setIsFilterOpen(false)}
+          />
 
-        <input
-          placeholder="Cidade"
-          value={filters.city}
-          onChange={(e) => setFilters(f => ({ ...f, city: e.target.value }))}
-        />
-
-        <input
-          placeholder="Estado"
-          value={filters.state}
-          onChange={(e) => setFilters(f => ({ ...f, state: e.target.value }))}
-        />
-
-        <input
-          placeholder="Bairro"
-          value={filters.neighborhood}
-          onChange={(e) => setFilters(f => ({ ...f, neighborhood: e.target.value }))}
-        />
-        {myProfile?.is_donor && (
-          <>
-            <select
-              onChange={(e) =>
-                setFilters(f => ({
-                  ...f,
-                  accept_donation: e.target.value === "" ? null : e.target.value === "true"
-                }))
-              }
-            >
-              <option value="">Aceita doação (todos)</option>
-              <option value="true">Sim</option>
-              <option value="false">Não</option>
-            </select>
-
-            <select
-              onChange={(e) =>
-                setFilters(f => ({
-                  ...f,
-                  pet_donation: e.target.value === "" ? null : e.target.value === "true"
-                }))
-              }
-            >
-              <option value="">Pet (todos)</option>
-              <option value="true">Sim</option>
-              <option value="false">Não</option>
-            </select>
-          </>
-        )}
-
-        {myProfile?.is_donor === false && (
-          <ItemFilter
-            type="receive"
+          <ProfileFilters
+            className="open"
+            onClose={() => setIsFilterOpen(false)}
+            filters={filters}
+            setFilters={setFilters}
+            myProfile={myProfile}
             selectedItems={selectedItems}
             setSelectedItems={setSelectedItems}
+            selectedItemsToDonate={selectedItemsToDonate}
+            setSelectedItemsToDonate={setSelectedItemsToDonate}
             itemSearch={itemSearch}
             setItemSearch={setItemSearch}
-          />
-        )}
-
-        {myProfile?.is_donor === true && (
-          <ItemFilter
-            type="donate"
-            selectedItems={selectedItemsToDonate}
-            setSelectedItems={setSelectedItemsToDonate}
-            itemSearch={itemSearchDonate}
-            setItemSearch={setItemSearchDonate}
-            myProfile={myProfile}
+            itemSearchDonate={itemSearchDonate}
+            setItemSearchDonate={setItemSearchDonate}
             useMyItems={useMyItems}
             setUseMyItems={setUseMyItems}
+            onApply={() => {
+              loadData();
+              setIsFilterOpen(false);
+            }}
           />
-        )}
+        </>
+      )}
+      <div className = "map-container">
+        <MapContainer
+          key={user?.id}
+          center={[-23.55, -46.63]}
+          zoom={12}
+          scrollWheelZoom={true}
+          style={{ height: "100%", width: "100%" }}
+        >
+          <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        <button onClick={loadData} className="search-btn">
-          Buscar
-        </button>-
-      </div>
-      <BackButton to="/profile" />
-      <MapContainer
-        key={user?.id}
-        center={[-23.55, -46.63]}
-        zoom={12}
-        scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          {validProfiles.map(p => {
+            if (!p.show_on_map) return null
 
-        {validProfiles.map(p => {
-          if (!p.show_on_map) return null
+            const position = getDisplayLocation(p)
 
-          const position = getDisplayLocation(p)
+            return (
+              <React.Fragment key={p.id}>
 
-          return (
-            <React.Fragment key={p.id}>
+                {/* CÍRCULO (se localização não for exata) */}
+                {!p.show_exact_location && (
+                  <Circle
+                    center={position}
+                    radius={900}
+                    pathOptions={{
+                      color: "#58af9b",
+                      fillColor: "#58af9b",
+                      fillOpacity: 0.2
+                    }}
+                  />
+                )}
 
-              {/* 🔵 CÍRCULO (se localização NÃO for exata) */}
-              {!p.show_exact_location && (
-                <Circle
-                  center={position}
-                  radius={500}
-                  pathOptions={{
-                    color: "#58af9b",
-                    fillColor: "#58af9b",
-                    fillOpacity: 0.2
-                  }}
-                />
-              )}
-
-              {/* 📍 MARCADOR */}
-              <Marker position={position}>
-                <Popup>
-                  <div style={{ marginBottom: "4px" }}>
-                    <strong>{p.name}</strong>
-                  </div>
-
-                  <div style={{ marginBottom: "4px" }}>
-                    {p.city} - {p.neighborhood}
-                  </div>
-                  <div style={{ marginBottom: "4px" }}>
-                    {p.is_donor === false && (
-                      p.accept_donation
-                        ? "Aceitando doação"
-                        : "Não aceitando doação no momento"
-                    )}
-                  </div>
-                
-
-                  {!p.show_exact_location && (
-                    <div style={{ fontSize: "12px", color: "gray", marginTop: "5px"}}>
-                      📍 Localização aproximada
+                {/* MARCADOR */}
+                <Marker position={position}>
+                  <Popup>
+                    <div style={{ marginBottom: "4px" }}>
+                      <strong>{p.name} - {p.is_donor? "Doador": "ONG"}</strong>
                     </div>
-                  )}
+
+                    <div style={{ marginBottom: "4px" }}>
+                      {p.city} - {p.neighborhood}
+                    </div>
+                    <div style={{ marginBottom: "4px" }}>
+                      {p.is_donor === false && (
+                        p.accept_donation
+                          ? "Aceitando doação"
+                          : "Não aceitando doação no momento"
+                      )}
+                    </div>
+                  
+
+                    {!p.show_exact_location && (
+                      <div style={{ fontSize: "12px", color: "gray", marginTop: "5px"}}>
+                        📍 Localização aproximada
+                      </div>
+                    )}
 
 
-                  {/* BOTÃO PERFIL */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      window.location.href = `/profile/${p.id}`
-                    }}
-                    style={{
-                      background: "#58af9b",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      marginRight: "8px",
-                      marginTop: "10px"
-                    }}
-                  >
-                    Ver perfil
-                  </button>
+                    {/* BOTÃO PERFIL */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        window.location.href = `/profile/${p.id}`
+                      }}
+                      style={{
+                        background: "#58af9b",
+                        color: "white",
+                        border: "none",
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        marginRight: "8px",
+                        marginTop: "10px"
+                      }}
+                    >
+                      Ver perfil
+                    </button>
 
-                  {/* BOTÃO CHAT */}
-                  <button
-                    onClick={(e) => {
-                      // Só executa a função se o chat estiver permitido
-                      if (p.allow_chat_requests !== false) {
-                        handleChatClick(e, p.id)
-                      }
-                    }}
-                    // O title cria a mensagem nativa ao passar o mouse
-                    title={p.allow_chat_requests === false ? "Essa pessoa desativou o chat" : ""}
-                    // Desabilita o botão fisicamente no HTML
-                    disabled={p.allow_chat_requests === false}
-                    style={{
-                      background: "#58af9b",
-                      color: "white",
-                      border: "none",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      // Muda o cursor e a opacidade se o chat estiver desativado
-                      cursor: p.allow_chat_requests === false ? "not-allowed" : "pointer",
-                      opacity: p.allow_chat_requests === false ? 0.5 : 1
-                    }}
-                  >
-                    Conversar
-                  </button>
-                </Popup>
-              </Marker>
+                    {/* BOTÃO CHAT */}
+                    <button
+                      onClick={(e) => {
+                        // Só executa a função se o chat estiver permitido
+                        if (p.allow_chat_requests !== false) {
+                          handleChatClick(e, p.id)
+                        }
+                      }}
+                      // O title cria a mensagem nativa ao passar o mouse
+                      title={p.allow_chat_requests === false ? "Essa pessoa desativou o chat" : ""}
+                      // Desabilita o botão fisicamente no HTML
+                      disabled={p.allow_chat_requests === false}
+                      style={{
+                        background: "#58af9b",
+                        color: "white",
+                        border: "none",
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        // Muda o cursor e a opacidade se o chat estiver desativado
+                        cursor: p.allow_chat_requests === false ? "not-allowed" : "pointer",
+                        opacity: p.allow_chat_requests === false ? 0.5 : 1
+                      }}
+                    >
+                      Conversar
+                    </button>
+                  </Popup>
+                </Marker>
 
-            </React.Fragment>
-          )
-        })}
-      </MapContainer>
+              </React.Fragment>
+            )
+          })}
+        </MapContainer>
+      </div>     
 
     </div>
   )

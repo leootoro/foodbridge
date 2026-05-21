@@ -10,6 +10,7 @@ import BackButton from "../components/BackButton"
 import defaultAvatar from "/default_user.png"
 import { categoryMapping } from '../lib/itemCategories';
 import ItemFilter from "../components/itemFilter"
+import ProfileFilters from "../components/FilterProfileUI";
 
 function SearchPage() {
   const navigate = useNavigate()
@@ -24,6 +25,7 @@ function SearchPage() {
   const [selectedItemsToDonate, setSelectedItemsToDonate] = useState([]);
   const [useMyItems, setUseMyItems] = useState(false);
   const [itemSearchDonate, setItemSearchDonate] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   
   const [filters, setFilters] = useState({
@@ -33,6 +35,9 @@ function SearchPage() {
     neighborhood: "",
     accept_donation: null,
     pet_donation: null,
+    immediate_availability: null,
+    local_pickup: null,
+    addressType: "all",
     minRating: 0 // Novo filtro
   })
   
@@ -66,6 +71,12 @@ function SearchPage() {
     setSelectedItemsToDonate([]);
   }, [filters.type]);
 
+  useEffect(() => {
+    if (filters.addressType === "online") {
+      setFilters(f => ({ ...f, neighborhood: "" }));
+    }
+  }, [filters.addressType]);
+
   const loadData = useCallback(async () => {
     if (!myProfile) return;
 
@@ -80,7 +91,11 @@ function SearchPage() {
       if (filters.neighborhood) query = query.ilike("neighborhood", `%${filters.neighborhood}%`);
       if (filters.accept_donation !== null) query = query.eq("accept_donation", filters.accept_donation);
       if (filters.pet_donation !== null) query = query.eq("pet_donation", filters.pet_donation);
+      if (filters.immediate_availability !== null) query = query.eq("immediate_availability", filters.immediate_availability);
+      if (filters.local_pickup !== null) query = query.eq("local_pickup", filters.local_pickup);
       if (searchTerm.trim()) query = query.ilike("name", `%${searchTerm.trim()}%`);
+      if (filters.addressType === "online") {query = query.eq("physical_address", false);}
+      if (filters.addressType === "physical") {query = query.eq("physical_address", true);}
 
       const { data: profilesData, error: profilesError } = await query;
       if (profilesError) throw profilesError;
@@ -106,9 +121,9 @@ function SearchPage() {
           const userRatings = ratingsMap[p.id] || [];
           const count = userRatings.length;
           
-          let avg = 5.0; // Padrão para novos
+          let avg = 'Novo'; // Padrão para novos
           if (count >= 3) {
-            const sum = userRatings.reduce((acc, curr) => acc + curr.rating_number, 0);
+            const sum = userRatings.reduce((acc, curr) => acc + curr, 0);
             avg = parseFloat((sum / count).toFixed(1));
           }
 
@@ -120,7 +135,29 @@ function SearchPage() {
           if (blockedIds.includes(p.id)) return false;
           if (p.show_only_to_opposite && p.is_donor === myProfile.is_donor) return false;
           
-          // 🟢 filtro para DOADOR (instituições)
+          // REGRA: se selecionou itens ou selecionar filtro específico por tipo de usuário → força tipo oposto
+          const hasItemFilter =
+            (!selectedItems.includes("todos") && selectedItems.length > 0) ||
+            (!selectedItemsToDonate.includes("todos") && selectedItemsToDonate.length > 0);
+
+          const hasDonationFilters = myProfile?.is_donor
+            ? (
+                filters.accept_donation !== null ||
+                filters.pet_donation !== null
+              )
+            : (
+                filters.immediate_availability !== null ||
+                filters.local_pickup !== null
+              );
+
+          const hasForcedOppositeFilter = hasItemFilter || hasDonationFilters;
+
+          if (hasForcedOppositeFilter && p.is_donor === myProfile.is_donor) {
+            return false;
+          }
+
+
+          // filtro para DOADOR (instituições)
           if (myProfile?.is_donor === true) {
             if (!selectedItemsToDonate.includes("todos") && selectedItemsToDonate.length > 0) {
               
@@ -136,10 +173,12 @@ function SearchPage() {
             }
           }
           // --- Filtro de Nota ---
-          if (p.avgRating < filters.minRating) return false;
+          if (p.ratingCount >= 3 && p.avgRating < filters.minRating) {
+            return false;
+          }
 
           // --- FILTRO DE ALIMENTOS (Agora dentro do filter corretamente) ---
-          // 🔵 MODO RECEBEDOR
+          // MODO RECEBEDOR
           if (myProfile?.is_donor === false) {
             if (selectedItems.includes("todos") || selectedItems.length === 0) return true;
 
@@ -157,7 +196,7 @@ function SearchPage() {
             });
           }
 
-          // 🟢 MODO DOADOR → NÃO usa esse filtro
+          // MODO DOADOR → NÃO usa esse filtro
           return true;
         });
 
@@ -186,6 +225,9 @@ function SearchPage() {
     <div className="search-page-container">
       <div className="search-header">
         <BackButton to="/profile" />
+        <button onClick={() => setIsFilterOpen(true)}>
+          Filtrar
+        </button>    
         <div className="search-bar-wrapper">
           <FiSearch className="search-icon" />
           <input
@@ -197,80 +239,39 @@ function SearchPage() {
           />
         </div>
       </div>
+      {isFilterOpen && (
+        <>
+          <div
+            className="filters-overlay"
+            onClick={() => setIsFilterOpen(false)}
+          />
+
+          <ProfileFilters
+            className="open"
+            onClose={() => setIsFilterOpen(false)}
+            filters={filters}
+            setFilters={setFilters}
+            myProfile={myProfile}
+            selectedItems={selectedItems}
+            setSelectedItems={setSelectedItems}
+            selectedItemsToDonate={selectedItemsToDonate}
+            setSelectedItemsToDonate={setSelectedItemsToDonate}
+            itemSearch={itemSearch}
+            setItemSearch={setItemSearch}
+            itemSearchDonate={itemSearchDonate}
+            setItemSearchDonate={setItemSearchDonate}
+            useMyItems={useMyItems}
+            setUseMyItems={setUseMyItems}
+            onApply={() => {
+              loadData();
+              setIsFilterOpen(false);
+            }}
+          />
+        </>
+      )}
 
       <div className="search-content">
-        <div className="search-filters-panel">
-          <h3>Filtros Avançados</h3>
         
-          <label>Tipo de Perfil</label>
-          <select value={filters.type} onChange={(e) => setFilters(f => ({ ...f, type: e.target.value }))}>
-            <option value="all">Todos</option>
-            <option value="donor">Doadores</option>
-            <option value="receiver">Recebedores</option>
-          </select>
-
-          <label>Cidade</label>
-          <input type="text" value={filters.city} onChange={(e) => setFilters(f => ({ ...f, city: e.target.value }))} placeholder="Ex: São Paulo" />
-          <label>Estado (UF)</label>
-          <input type="text" maxLength="2" value={filters.state} onChange={(e) => setFilters(f => ({ ...f, state: e.target.value.toUpperCase() }))} placeholder="Ex: SP" />
-          <label>Bairro</label>
-          <input type="text" value={filters.neighborhood} onChange={(e) => setFilters(f => ({ ...f, neighborhood: e.target.value }))} placeholder="Ex: Centro" />
-          
-          {myProfile?.is_donor && (
-            <>
-              <label>Aceita Doação?</label>
-              <select onChange={(e) => setFilters(f => ({ ...f, accept_donation: e.target.value === "" ? null : e.target.value === "true" }))}>
-                <option value="">Todos</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-              <label>Doação para Pets?</label>
-              <select onChange={(e) => setFilters(f => ({ ...f, pet_donation: e.target.value === "" ? null : e.target.value === "true" }))}>
-                <option value="">Todos</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-            </>
-          )}
-
-          {/* FILTRO DE NOTA MÍNIMA */}
-          <label>Avaliação Mínima</label>
-          <select 
-            value={filters.minRating} 
-            onChange={(e) => setFilters(f => ({ ...f, minRating: Number(e.target.value) }))}
-          >
-            <option value="0">Todas as notas</option>
-            <option value="3">3.0+ Estrelas</option>
-            <option value="4">4.0+ Estrelas</option>
-            <option value="4.5">4.5+ Estrelas</option>
-          </select>
-
-          {/* FILTRO DE ITENS */}
-          {myProfile?.is_donor === false && (
-            <ItemFilter
-              type="receive"
-              selectedItems={selectedItems}
-              setSelectedItems={setSelectedItems}
-              itemSearch={itemSearch}
-              setItemSearch={setItemSearch}
-            />
-          )}
-
-          {myProfile?.is_donor === true && (
-            <ItemFilter
-              type="donate"
-              selectedItems={selectedItemsToDonate}
-              setSelectedItems={setSelectedItemsToDonate}
-              itemSearch={itemSearchDonate}
-              setItemSearch={setItemSearchDonate}
-              myProfile={myProfile}
-              useMyItems={useMyItems}
-              setUseMyItems={setUseMyItems}
-            />
-          )}
-          <button onClick={loadData} className="filter-apply-btn">Refinar Busca</button>
-        </div>
-
         <div className="search-results-area">
           {profiles.length === 0 ? (
             <div className="no-results">Nenhum resultado encontrado.</div>
@@ -285,7 +286,7 @@ function SearchPage() {
                     {/* EXIBIÇÃO DA MÉDIA */}
                     <div className="profile-card-rating">
                       <FaStar className="star-icon" />
-                      <span>{p.avgRating > 0 ? p.avgRating : "Novo"}</span>
+                      <span>{p?.ratingCount >= 3 ? p?.avgRating : "Novo"}</span>
                     </div>
 
                     <span className={`badge ${p.is_donor ? "donor" : "receiver"}`}>

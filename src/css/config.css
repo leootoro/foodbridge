@@ -1,6 +1,15 @@
+/* 🔥 ESSENCIAL - evita scroll lateral */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
 .config-container {
-  width: 30%;       
-  max-width: 1000px; 
+  width: 50%;       
+  max-width: 700px; 
   margin: 40px auto; 
   padding: 30px;
   font-family: Arial, sans-serif;
@@ -8,6 +17,11 @@
 
 .config-container h1 {
   margin-bottom: 20px;
+  text-align: center;
+
+}
+.config-container h2 {
+  align-self: center;
 }
 
 .config-section {
@@ -18,22 +32,18 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-.config-back-button {
-  display: flex; 
-  flex-direction: row; 
-  align-items: center; 
-  /* gap: 12px;  */
-  margin-left: -15px;
-  margin-bottom: 25px; 
-  color: #58af9b;
+.config-back-button button {
+  position: absolute;
+  left: 0;
 }
 
-.config-back-button h2 {
-  /* Remove a margem padrão do h2 que costuma empurrar tudo pra baixo */
+.config-section h2 {
+  /* Remove a margem padrão do h2 que empurra tudo pra baixo */
   margin: 0; 
   color: #58af9b;
-  font-size: 1.3rem; /* Opcional: ajuste o tamanho se ficar grande demais */
-  margin-left: -10px
+  font-size: 1.3rem; 
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 .config-item {
@@ -57,6 +67,8 @@
   background: #6b6f6e;
   color: white;
   cursor: pointer;
+  margin-top:10px;
+  text-align:center;
 }
 
 .config-button:hover {
@@ -66,12 +78,34 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.config-button.danger {
-  background: #e74c3c;
-
+.config-button-senha{
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  background: #6b6f6e;
+  color: white;
+  cursor: pointer;
+  margin-top:10px;
+  width:100%;
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
 }
 
-.config-button.danger:hover {
+.config-button-danger {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  margin-top:10px;
+  background: #e74c3c;
+  width: 100%;
+  display: flex;
+  justify-content: center; 
+  align-items: center; 
+}
+.config-button-danger:hover {
   background: #c0392b;
   transform: scale(1.05);
   border-color: #007bff;
@@ -83,9 +117,9 @@
   margin-right: 10px;    
   cursor: pointer;
 }
-.config-button .logout-btn{
+.config-button.logout-btn{
 
-   flex: 1,;
+   flex: 1;
    background: #7a7777;
    color: #ffffff;
 }
@@ -94,4 +128,83 @@
   transform: scale(1.05);
   border-color: #007bff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ========================= */
+/* 📱 TABLET (até 1024px) */
+/* ========================= */
+@media (max-width: 1024px) {
+  .config-container {
+    width: 70%;
+    padding: 25px;
+    max-width: 700px;
+  }
+
+  .config-item {
+    flex-direction: row;
+  }
+
+  .config-item label {
+    font-size: 14px;
+  }
+}
+
+/* ========================= */
+/* 📱 CELULAR (até 768px) */
+/* ========================= */
+@media (max-width: 768px) {
+  .config-container {
+    width: 95%;
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 100%
+  }
+
+  .config-section {
+    padding: 15px;
+    width: 100%;
+  }
+
+  .config-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .config-button{
+    width: 100%;
+  }
+
+  .config-item label {
+    max-width: 100%;
+    font-size: 14px;
+  }
+
+  .config-item input {
+    align-self: flex-end;
+  }
+
+  /* botões empilhados */
+  .action-buttons-container {
+    display: flex;
+    gap:10px;
+  }
+
+  .config-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; 
+    flex-direction: row
+  }
+
+  .config-actions button {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+  
+  }
+  .action-buttons-container button {
+    flex: 1;
+    width: auto;
+  }
+
 }

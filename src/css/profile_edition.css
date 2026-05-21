@@ -3,10 +3,9 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #f5f5f5; /* Troque o vermelho de volta para o cinza aqui */
+  background-color: #f5f5f5;
 }
 
-/* 2. O Root do React também precisa ocupar 100% da largura */
 #root {
   width: 100%;
   min-height: 100vh;
@@ -15,19 +14,18 @@ html, body {
   align-items: center; /* Centraliza o formulário horizontalmente */
 }
 
-/* 2. O Body agora foca apenas em centralizar o que está dentro */
+
 body {
   display: flex;
-  justify-content: center; /* Centraliza horizontalmente */
+  justify-content: center; 
   align-items: flex-start; /* Começa no topo */
   font-family: Arial, sans-serif;
 }
 
-/* 3. O Container com as correções de centralização */
 .perfil-form-container {
   background-color: white;
   width: 95%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 40px auto; /* O 'auto' nas laterais garante a centralização horizontal */
   padding: 30px;
   border-radius: 15px;
@@ -54,7 +52,7 @@ h2 {
 .perfil-duas-colunas-wrapper {
   display: flex;
   gap: 50px;
-  justify-content: center; /* Garante que as colunas fiquem centralizadas entre si */
+  justify-content: center;
   flex-wrap: wrap;
 }
 
@@ -67,6 +65,14 @@ h2 {
   padding: 15px;
   background-color: #f9f9f9;
   margin-bottom: 15px;
+}
+.food-title {
+  margin-bottom: 19px;
+  text-align: center;
+  font-weight: "bold";
+  margin-bottom: 12px;
+  display: block;
+  color: #334155;
 }
 
 .food-item-row {
@@ -290,10 +296,13 @@ h2 {
 .food-container {
   width: 100%;
   margin-bottom: 10px;
+  overflow-x: hidden;
+  /* min-height: 150px; */
 }
 
 .food-row {
-  display: flex; /* Mudamos para flex para melhor controle do campo de busca */
+  display: grid; 
+  grid-template-columns: 1fr 120px 80px 40px;
   gap: 10px;
   align-items: center;
   background: white;
@@ -302,6 +311,13 @@ h2 {
   border: 1px solid #eee;
   margin-bottom: 10px;
   width: 100%;
+  width: 100%;
+  min-width: 0; 
+}
+
+.food-row > :first-child {
+  flex: 1;
+  min-width: 120px;
 }
 
 /* Garante que o container do select cresça e ocupe o espaço restante */
@@ -318,7 +334,7 @@ h2 {
   background: white;
   cursor: pointer;
   font-size: 14px;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: 40px;
@@ -353,4 +369,687 @@ h2 {
   align-items: center;
   justify-content: center;
   flex-shrink: 0; /* Não deixa o botão espremer */
+  flex: 0 0 40px;
+  } 
+
+  .btn-remove-food-circle.spaced {
+    margin-left: -7px;
+  } 
+
+.crop-wrapper {
+  position: relative;
+  width: 300px;
+  height: 400px;
+  margin: 0 auto;
+}
+
+.crop-controls button {
+  background: #3897f0;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Fundo escuro + blur */
+.crop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+}
+
+/* Caixa do modal */
+.crop-modal {
+  background: #1c1c1c;
+  padding: 20px;
+  border-radius: 16px;
+  width: 350px;
+  max-width: 90%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Área do crop */
+.crop-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: black;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Controles */
+.crop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+/* =========================
+   LAYOUT GERAL
+========================= */
+
+.perfil-form-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.perfil-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.perfil-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* =========================
+   AVATAR
+========================= */
+
+.perfil-avatar-wrapper {
+  display: inline-block;
+}
+
+.perfil-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.edit-photo-label {
+  color: #3897f0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 5px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+/* =========================
+   COLUNAS
+========================= */
+
+.perfil-duas-colunas-wrapper {
+  display: flex;
+  gap: 60px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.perfil-coluna {
+  flex: 1;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 80%;
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+.input-default {
+  width: 80%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  outline: none;
+  height: 40px;
+  min-width: 0;
+  height: 40px;
+}
+
+
+.textarea-bio {
+  min-height: 100px;
+}
+
+.select-small {
+  width: 35%;
+  background: white;
+}
+
+/* =========================
+   FLEX HELPERS
+========================= */
+
+.row-flex {
+  display: flex;
+  gap: 10px;
+}
+
+.column-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.measure-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 160px;
+}
+.measure-group input {
+  width: 60px;
+}
+
+.quantity-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0; 
+}
+
+/* =========================
+   SWITCH
+========================= */
+
+.switch-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.switch-container-spaced {
+  margin-bottom: 20px;
+}
+
+/* =========================
+   LABELS
+========================= */
+
+.label-default {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.header-label-item {
+  font-size: 12px;
+  font-weight: bold;
+  color: #64748b;
+  flex:1;
+  min-width: 150px;
+}
+
+.header-label-tamanho {
+  font-size: 12px;
+  font-weight: bold;
+  color: #64748b;
+  width: 165px;
+}
+
+.header-label-qty {
+  font-size: 12px;
+  font-weight: bold;
+  color: #64748b;
+  width: 95px;
+}
+
+/* =========================
+   SUGGESTIONS
+========================= */
+
+.suggestions-list {
+  list-style: none;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid #ccc;
+  background: #fff;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  cursor: pointer;
+  padding: 5px;
+}
+
+.suggestion-item:hover {
+  background: #f1f5f9;
+}
+
+/* =========================
+   FOOD SECTION
+========================= */
+
+.food-header {
+  display: flex;
+  gap: 10px;
+  padding-left: 5px;
+  margin-bottom: 5px;
+  align-items: center;
+}
+
+/* SELECT CUSTOM */
+.custom-select-wrapper {
+  position: relative;
+}
+
+.select-display {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: white;
+}
+
+.select-dropdown {
+  position: absolute;
+  width: 100%;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 10;
+  margin-top: 5px;
+}
+
+.select-search {
+  width: 100%;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  outline: none;
+}
+
+.options-list {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.select-option {
+  padding: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.select-option:hover {
+  background: #f1f5f9;
+}
+
+.select-option.disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.select-option.outro {
+  color: #3897f0;
+  font-weight: bold;
+  border-top: 1px solid #eee;
+}
+
+/* INPUT CUSTOM */
+.custom-input-wrapper {
+  position: relative;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #3897f0;
+  background-color: #f0f7ff;
+  font-size: 14px;
+}
+
+/* =========================
+   BOTÕES
+========================= */
+
+.btn-primary-prof_edition {
+  width: 250px;
+  padding: 14px;
+  background: #3897f0;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+
+}
+
+.btn-secondary-prof_edition {
+  width: 100px;
+  padding: 14px;
+  background: #5a5757;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  margin-left: 20px;
+}
+
+
+/* =========================
+   UTILITÁRIOS
+========================= */
+
+.spaced {
+  margin-left: 5px;
+}
+
+.spaced-top {
+  margin-top: 10px;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.footer-actions {
+  text-align: center;
+  margin-top: 40px;
+}
+
+/* =========================
+   CROP MODAL
+========================= */
+
+.crop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.crop-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.crop-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.crop-controls {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.crop-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.input-style {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input-style:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+}
+
+.input-style::placeholder {
+  color: #9ca3af;
+}
+
+.input-style-food{
+  width: 80px;
+  padding: 10px 5px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  background-color: white;
+}
+
+.input-style-quantity {
+  width: 50px;
+  padding: 8px 2px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+
+
+  body {
+    align-items: flex-start;
+  }
+
+  .perfil-form-container {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    padding: 20px 15px;
+    overflow-x:hidden;
+  }
+  .perfil-duas-colunas-wrapper {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .perfil-coluna {
+    width: 100%;
+    min-width: unset;
+  }
+  .input-default {
+    width: 100%;
+  }
+
+  .select-small {
+    width: 100%;
+  }
+
+  .food-row * {
+    min-width: 0 !important;
+    font-size: 13px;
+  } 
+
+  .measure-group,
+  .quantity-group {
+    width: 100%;
+    justify-content: space-between;
+    min-width: 0;
+    flex: 1;
+  }
+  .btn-primary-prof_edition {
+    width: 100%;
+  }
+
+  .btn-secondary-prof_edition {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  .perfil-avatar {
+    width: 90px;
+    height: 90px;
+  }
+
+  .perfil-title {
+    font-size: 20px;
+  }
+
+  .section-title {
+    font-size: 14px;
+  }
+  
+  .food-title {
+    padding-left: 0px; 
+    text-align: center;
+  }
+  .header-label-item,
+  .header-label-tamanho,
+  .header-label-qty {
+      width: auto;
+      min-width: 0;
+  }
+  .header-label-item {
+    text-align: left;
+    width: auto;
+  }
+
+  .header-label-tamanho {
+    text-align: center; 
+  }
+
+  .header-label-qty {
+    text-align: center;
+  }
+  .food-container {
+      width: 100%;
+      margin-bottom: 10px;
+      overflow-x: auto; /* permite scroll */
+    }
+  .food-header,
+  .food-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 2fr) 1fr 1fr 40px;
+    gap: 10px;
+    align-items: center;
+    min-width: 500px;
+  }
+  .input-default-food{
+    min-width: 50px !important;
+  }
+  .input-style-food{
+    min-width: 30px !important;
+  }
+  .select-display{
+    min-width: 100px;
+  }
+  .input-style-quantity{
+    min-width: 60px !important;
+  }
+  .food-row{
+    white-space: nowrap;
+  }
+  .quantity-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    flex: 0 0 auto;   /*  NÃO deixa crescer */
+    width: fit-content; /*  tamanho só do conteúdo */
+  }
+}
+
+@media (max-width: 768px) {
+
+  
+  .food-select,
+  .food-qty,
+  .input-style-quantity {
+    width: 100%;
+    min-width: 0;
+  }
+  .input-style-food{
+    width: 40%;
+  }
+  .measure-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .btn-remove-food-circle {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    font-size:14px;  
+  }
+  .food-row {
+    overflow-x: auto;
+  }
+  
+  .food-row .input-default {
+    height: 34px;
+  } 
+
+  .input,
+   select {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .food-header,
+  .food-row {
+    display: grid;
+    grid-template-columns: minmax(160px, 2fr) 1fr 1fr 40px;
+    gap: 10px;
+    align-items: center;
+  }
+
+
+  .food-measure {
+    display: flex;
+    gap: 10px;
+  }
+
+  .food-quantity {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .food-remove {
+    display: flex;
+    justify-content: flex-end;
+  }
 }

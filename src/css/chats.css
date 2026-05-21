@@ -5,15 +5,16 @@
   overflow: hidden; /* Evita scroll duplo na página */
 }
 
-.sidebar {
+.sidebar-chat {
   width: 230px;
-  min-width: 230px; /* Impede a sidebar de encolher */
+  min-width: 230px; 
   background: #e7f0ec;
   padding: 30px 20px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  position: sticky;
+  height: fit-content;
+  align-self: flex-start;
+  /* position: sticky; */
   top: 0;
 }
 
@@ -95,7 +96,7 @@
 }
 
 .chat-item:hover .btn-delete-chat {
-  opacity: 1; /* O ícone de lixo aparece ao passar o mouse na conversa */
+  opacity: 1; 
 }
 
 .btn-delete-chat:hover {
@@ -122,54 +123,217 @@
 }
 
 /* MENU */
-.sidebar_chat {
+.sidebar-chat {
   width: 250px;
   background: #dfe8e5;
   padding: 20px;
 
-  height: 100vh; /* 🔥 */
-  position: fixed; /* 🔥 fixa na esquerda */
+  height: 100vh; 
+  position: relative; 
   left: 0;
   top: 0;
 }
 
 /* CONTEÚDO */
 .chat-content {
-  flex: 1; /* Faz este container "empurrar" e ocupar todo o resto da tela */
+  flex: 1;
   display: flex;
   flex-direction: column;
   height: 100vh;
   background-color: #fff;
 }
 
-.sidebar ul{
+.sidebar-chat ul{
   list-style:none;
   padding:10px 0;
   width: 100%;
 }
 
-.sidebar li {
+.sidebar-chat li {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Alinha o texto à esquerda, não no centro */
-  padding: 10px 20px; /* Ajustado preenchimento lateral */
+  justify-content: flex-start; 
+  padding: 10px 20px;
   border-radius: 8px;
   margin-bottom: 16px;
   cursor: pointer;
   background: white;
   transition: all 0.2s ease;
   white-space: nowrap;
-  height: 45px; /* Aumentado para caber o texto confortavelmente */
+  height: 45px; 
   width: 100%;
   font-size: 18px;
 }
 
-.sidebar li:hover{
+.sidebar-chat li:hover{
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.sidebar li.active{
+.sidebar-chat li.active{
   background:#d0e6de;
   font-weight:bold;
+}
+
+.chat-item.blocked {
+  opacity: 0.45;              /* efeito apagado */
+  filter: grayscale(70%);    
+  cursor: not-allowed;       
+  position: relative;         /* necessário pro tooltip */
+  transition: all 0.2s ease;
+}
+
+/* impede clique de fato (segurança visual) */
+.chat-item.blocked:active {
+  pointer-event:none;
+}
+
+.chat-item.blocked::after {
+  content: "Este usuário está bloqueado, ou não está aceitando chats no momento";
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* aparece no hover */
+.chat-item.blocked:hover::after {
+  opacity: 1;
+}
+.menu-btn {
+  display: none;
+}
+
+.close-sidebar-btn {
+  display: none;
+}
+@media (max-width: 768px) {
+
+  /* container vira coluna */
+  .chat-container {
+    flex-direction: column;
+  }
+
+  /* conteúdo ocupa tudo */
+  .chat-content {
+    width: 100%;
+    height: 100vh;
+  }
+
+  /* lista ocupa mais espaço */
+  .chat-list {
+    padding: 10px;
+  }
+
+  /* item mais compacto */
+  .chat-item {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .chat-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .chat-name {
+    font-size: 13px;
+  }
+
+  .chat-message {
+    font-size: 12px;
+  }
+
+  .chat-time {
+    font-size: 11px;
+  }
+
+  /* header menor */
+  .chat-header {
+    padding: 10px 15px;
+    min-height: 60px;
+  }
+
+  .chat-header h2 {
+    font-size: 1rem;
+  }
+
+}
+
+@media (max-width: 1024px) {
+
+  .sidebar-chat {
+    position: fixed !important;  /* 🔥 força sobrescrever */
+    top: 0;
+    left: -260px;
+    width: 260px;
+    height: 100%;
+    z-index: 20;
+    transition: left 0.3s ease;
+    overflow-y: auto;   /* ativa scroll */
+    -webkit-overflow-scrolling: touch; /* suavidade no mobile */
+  }
+
+  .sidebar-chat li {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .logo {
+    font-size: 20px;
+  }
+
+  .chat-list {
+    padding: 15px;
+  }
+
+  .chat-item {
+    padding: 10px;
+  }
+
+  .chat-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  .chat-name{
+    font-size: 16px;
+  }
+  .chat-message{
+    font-size:14px;
+  }
+
+  .menu-btn {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: white;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+
+  .sidebar-chat.open {
+    left: 0; /* aparece */
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 10;
+  }
+
 }

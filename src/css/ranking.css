@@ -1,0 +1,90 @@
+
+.search-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ranking-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f9fafb;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.ranking-position {
+  font-weight: bold;
+  font-size: 18px;
+  width: 40px;
+  text-align: center;
+  color: #16a34a;
+}
+
+.ranking-photo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.ranking-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-info .name {
+  font-weight: 600;
+}
+
+.ranking-info .points {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.back-fixed {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  z-index: 10;
+}
+
+/* container geral */
+.ranking-wrapper {
+  width: 100%;
+}
+
+/* header ocupa a tela inteira */
+.ranking-header {
+  position: relative;
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* botão fixo à esquerda da tela */
+.ranking-header button {
+  position: absolute;
+  left: 20px;
+}
+
+/* conteúdo continua centralizado */
+.ranking-page {
+  max-width: 500px;
+  margin: 0 auto;
+}
+.ranking-page h2 {
+  margin-bottom: 16px;
+}

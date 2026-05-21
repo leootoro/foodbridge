@@ -20,10 +20,10 @@ function CreatePost() {
   const { file, previewUrl } = location.state
   const [message, setMessage] = useState("")
   const [user, setUser] = useState(null)
-  // Estados do Crop
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isPosting, setIsPosting] = useState(false);
 
   useEffect(() => {
 
@@ -41,12 +41,16 @@ function CreatePost() {
   };
 
   async function handlePost() {
+    if (isPosting){
+      setTimeout(4000)
+      return;
+    }
     // 1. Evita erros se a função for chamada sem usuário ou sem texto/arquivo
     if (!user?.id) {
         console.error("Usuário não autenticado.");
         return;
     }
-
+    setIsPosting(true);
     try {
         let filePath = null;
         let mediaType = null;
@@ -60,7 +64,7 @@ function CreatePost() {
 
         // 2. Só tenta fazer o upload e checar o tipo se existir um arquivo
         if (file) {
-          filePath = await uploadPost(file, user.id);
+          filePath = await uploadPost(finalFile, user.id);
           mediaType = file.type.startsWith("video") ? "video" : "image";
         }
 
@@ -68,17 +72,15 @@ function CreatePost() {
         const { data, error } = await supabase
         .from("posts")
         .insert({
-            user_id: user.id, // Recomendo adicionar o autor do post
+            user_id: user.id, 
             media_url: filePath,
             media_type: mediaType,
             text: message
         })
-        // .select();
       
 
         if (error) {
         console.error("Erro ao inserir post:", error.message);
-        // Aqui você poderia colocar um toast, ex: toast.error("Falha ao postar")
         return; 
         }
 
@@ -90,7 +92,9 @@ function CreatePost() {
     } catch (err) {
         // 5. Captura falhas do uploadPost ou outros erros não previstos
         console.error("Erro inesperado durante a criação do post:", err);
-    }
+    } finally {
+      setIsPosting(false); // libera
+    } 
   }
   
   return (
@@ -108,7 +112,7 @@ function CreatePost() {
               image={previewUrl}
               crop={crop}
               zoom={zoom}
-              aspect={1 / 1} // Defina aqui: 1/1 para quadrado ou 4/3 para retangular
+              aspect={3/ 4} 
               onCropChange={setCrop}
               onCropComplete={onCropComplete}
               onZoomChange={setZoom}

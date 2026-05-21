@@ -6,7 +6,7 @@
   width: 100%;
   background-color: #f4f7f6;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: hidden; /* Evita scroll na página inteira */
+  overflow: hidden
 }
 
 /* HEADER (Barra de Busca) */
@@ -24,26 +24,29 @@
   position: relative;
   flex: 1;
   max-width: 600px;
+  width: 100%;
 }
 
 .search-icon {
   position: absolute;
-  left: 15px;
-  top: 50%;
+  left: 14px;
+  top: 30%;
   transform: translateY(-50%);
   color: #888;
   font-size: 20px;
+  pointer-events: none;
 }
 
 .search-input {
   width: 100%;
-  padding: 12px 15px 12px 50px; /* Espaço para o ícone */
   border-radius: 25px;
   border: 1px solid #e0e0e0;
   background-color: #f9f9f9;
   font-size: 16px;
   outline: none;
   transition: all 0.3s ease;
+  padding-left: 45px !important;  
+  box-sizing: border-box; 
 }
 
 .search-input:focus {
@@ -56,7 +59,7 @@
 .search-content {
   display: flex;
   flex: 1;
-  overflow: hidden; /* Permite scroll independente nas colunas */
+  overflow: visible;
 }
 
 /* PAINEL DE FILTROS (Esquerda) */
@@ -69,6 +72,7 @@
   flex-direction: column;
   gap: 12px;
   overflow-y: auto; /*Scroll se os filtros forem muitos*/
+  z-index: 20;
 }
 
 .search-filters-panel h3 {
@@ -258,7 +262,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1; /* Ocupa todo o espaço da esquerda */
+  flex: 1;
   cursor: pointer;
 }
 
@@ -287,8 +291,7 @@
   position: absolute;
   z-index: 9999;
   right: 0;
-  top: 30px; /* Aparece logo abaixo do ícone */
-  
+  top: 30px;   
   opacity: 0;
   transition: opacity 0.2s;
   font-size: 12px;
@@ -299,7 +302,7 @@
 }
 
 .info-icon:hover {
-  color: #58af9b; /* Cor de destaque do seu tema */
+  color: #58af9b; 
 }
 
 /* Triângulo do balão - Agora apontando para a ESQUERDA */
@@ -307,7 +310,7 @@
   content: "";
   position: absolute;
   top: 50%;
-  right: 100%; /* Posiciona na borda esquerda do balão */
+  right: 100%; 
   margin-top: -5px;
   border-width: 5px;
   border-style: solid;
@@ -367,7 +370,7 @@
 .items-filter-section {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* 🔥 espaço entre título, busca, botão e lista */
+  gap: 10px; 
   margin-top: 15px;
 }
 
@@ -422,4 +425,143 @@
 
 .items-scroll-container::-webkit-scrollbar-thumb:hover {
   background: #999;
+}
+.filter-toggle-btn {
+  display: none;
+  background: #58af9b;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+/* HEADER DO FILTRO */
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* overlay (fundo escuro) */
+.filters-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 9998;
+}
+
+/* painel de filtros */
+.search-filters-panel {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 280px;
+  background: white;
+  z-index: 9999 !important;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.search-filters-panel select {
+  font-size: 14px; 
+  padding: 8px;
+}
+/* botão X */
+.close-filters-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10000; 
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+.filter-toggle-btn {
+  background: #58af9b;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 5;
+}
+
+@media (max-width: 1024px) {
+
+  .filters-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 40;
+  }
+  .filter-toggle-btn {
+    display: block;
+  }
+  .search-content {
+    flex-direction: column;
+  }
+
+  .search-results-area {
+    padding: 15px;
+  }
+  
+  .search-filters-panel.open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh !important;
+    width: 80%;
+    max-width: 100vh !important;
+    max-height: 100vh !important;
+    transform: translateX(0%);
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    font-size:12px !important;
+    z-index: 1001;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+  }
+
+  .search-filters-panel select {
+    font-size: 14px !important;
+    padding: 8px;
+  }
+  .search-filters-panel option {
+    font-size: 10px !important;
+  }
+
+  .filters-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+  }
+  .close-filters-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+  }
+  
+}
+
+
+@media (max-width: 768px) {
+
+  .search-header {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+
+  .search-input {
+    font-size: 14px;
+  }
+
 }

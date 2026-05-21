@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase } from "../lib/supabase"
-import { updateProfile, save_lat_and_long } from "../services/profileService"
+import { updateProfile} from "../services/profileService"
+import {save_lat_and_long } from "../services/geocode";
 import { upload_profile_photo, get_profile_photo_Url } from "../services/mediaService"
 import { useNavigate } from "react-router-dom"; 
 import Cropper from "react-easy-crop"
+import { getCroppedImg } from "../lib/canvasUtils";
+import BackButton from "../components/BackButton";
 import "../css/profile_edition.css"
 import { expandedMarketItems } from '../lib/itemCategories';
 
@@ -14,9 +17,11 @@ function EditProfile() {
   const [imageSrc, setImageSrc] = useState(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
-  const [selectedFile, setSelectedFile] = useState(null)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
   const [foodList, setFoodList] = useState([{ item: "", customItem: "", quantity: 1, measureValue: "", unit: "kg" }]);
   const [foodSearch, setFoodSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const fileInputRef = useRef(null)
   const estadosBR = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", 
   "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", 
@@ -65,10 +70,10 @@ function EditProfile() {
     immediate_availability: false,
     local_pickup: true,
     food_available: "",
-    physical_address: ""
+    physical_address: false
   })
 
-  // 🔄 Carregar dados do banco
+  //Carregar dados do banco
   useEffect(() => {
     async function loadData() {
       window.scrollTo(0, 0);
@@ -110,7 +115,7 @@ function EditProfile() {
 
       //Sincroniza a lista de alimentos
       // Se houver dados no banco e for um array, carregamos. 
-      if (profile.food_available && Array.isArray(profile.food_available) && profile.food_available.length > 0) {
+      if (profile && profile.food_available && Array.isArray(profile.food_available) && profile.food_available.length > 0) {
         setFoodList(profile.food_available);
       } else {
         setFoodList([{ item: "", customItem: "", quantity: 1, measureValue: "", unit: "kg" }]);
@@ -120,19 +125,90 @@ function EditProfile() {
     loadData()
   }, [])
 
+  function handleCancelCrop() {
+    setImageSrc(null)
+    setCroppedAreaPixels(null)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1) 
 
-  // ✏️ Atualizar inputs
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "" // 🔥 ISSO resolve o bug
+    }
+  }
+
+  // Atualizar inputs
   function handleChange(e) {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
   }
+  
+  function handleChange_sugestion(e) {
+    const value = e.target.value;
 
-  // 🔘 Switch
+    setForm(prev => ({ ...prev, food_restrictions: value }));
+
+    // pega a última palavra digitada
+    const lastWord = value.split(",").pop().trim().toLowerCase();
+
+    if (lastWord.length > 0) {
+      const filtered = expandedMarketItems.filter(item =>
+        item.toLowerCase().includes(lastWord)
+      );
+
+      setSuggestions(filtered.slice(0, 5)); // limita sugestões
+    } else {
+      setSuggestions([]);
+    }
+  }
+  const handleSuggestionClick = (suggestion) => {
+    const parts = form.food_restrictions.split(",");
+
+    parts[parts.length - 1] = " " + suggestion;
+
+    const newValue = parts.join(",").replace(/^,/, "").trim();
+    setForm(prev => ({
+      ...prev,
+      food_restrictions: newValue
+    }));
+    setSuggestions([]);
+  };
+  
+  // Switch
   function handleSwitch(name) {
     setForm(prev => ({ ...prev, [name]: !prev[name] }))
   }
 
-  // 💾 Salvar
+  async function handleCropAndUpload() {
+    try {
+      if (!imageSrc || !croppedAreaPixels || !user) return
+
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels)
+
+      const file = new File([croppedBlob], "profile.jpg", {
+        type: "image/jpeg"
+      })
+
+      const filePath = await upload_profile_photo(file, user.id)
+
+      await updateProfile(user.id, {
+        photo_url: filePath
+      })
+
+      setForm(prev => ({
+        ...prev,
+        photo_url: filePath
+      }))
+
+      setImageSrc(null)
+
+      alert("Foto atualizada!")
+
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Salvar
   async function handleSave() {
     try {
       if (!user) return
@@ -142,10 +218,9 @@ function EditProfile() {
       const cleanedFoodList = foodList.filter(row => {
         const hasItem = row.item !== "" && row.item !== "Selecione...";
         const isCustomValid = row.item === "Outro" ? row.customItem?.trim() !== "" : true;
-        
         return hasItem && isCustomValid;
       });
-
+      
       // 2. Prepara o objeto final
       const finalFormData = {
         ...form,
@@ -175,10 +250,15 @@ function EditProfile() {
 
  async function handleSavePhoto() {
     try {
-      if (!selectedFile || !user) return
+      if (!imageSrc || !croppedAreaPixels || !user) return
 
-      // 🔥 upload usando sua função
-      const filePath = await upload_profile_photo(selectedFile, user.id)
+      const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels)
+
+      const file = new File([croppedBlob], "profile.jpg", {
+        type: "image/jpeg"
+      })
+
+      const filePath = await upload_profile_photo(file, user.id)
 
       if (!filePath) return
 
@@ -194,7 +274,6 @@ function EditProfile() {
 
       console.log("form_photo",form.photo_url)
       setImageSrc(null)
-      setSelectedFile(null)
 
       alert("Foto atualizada!")
 
@@ -204,30 +283,75 @@ function EditProfile() {
   }
   return (
   <div className="perfil-form-container">
-
-    {/* HEADER */}
-    <div style={{ textAlign: "center", marginBottom: "50px" }}>
-      <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
+    <BackButton/>
+    <div className="perfil-header">
+      <h2 className="perfil-title">Editar perfil
         Editar perfil
       </h2>
 
-      <div style={{ display: "inline-block" }}>
+       <div className="perfil-avatar-wrapper">
         <img
           src={
             form?.photo_url
-              ? get_profile_photo_Url(form.photo_url)
+              ? get_profile_photo_Url(form.photo_url) + `?t=${Date.now()}`
               : "/default_user.png"
           }
           alt="avatar"
-          style={{ ...avatarStyle, width: "110px", height: "110px" }}
+          className="perfil-avatar"
         />
+        {imageSrc && (
+          <div className="crop-overlay">
 
-        <label style={{ ...editPhotoStyle, marginTop: "5px", display: "block" }}>
+            <div className="crop-modal">
+              
+              <div className="crop-container">
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  cropShape="round"
+                  showGrid={false}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onCropComplete={(croppedArea, croppedPixels) => {
+                    setCroppedAreaPixels(croppedPixels)
+                  }}
+                  onZoomChange={setZoom}
+                />
+              </div>
+
+              <div className="crop-controls">
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                />
+
+                <div className="crop-buttons">
+                  <button onClick={handleCropAndUpload}>
+                    Salvar
+                  </button>
+
+                  <button onClick={handleCancelCrop}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        <label className="edit-photo-label">
           Editar foto
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/png, image/jpeg"
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files[0]
               if (!file) return
 
@@ -237,11 +361,11 @@ function EditProfile() {
                 alert("Só JPG ou PNG")
                 return
               }
-
+              
               const url = URL.createObjectURL(file)
-              setSelectedFile(file)
-              setImageSrc(url)
+              setImageSrc(url) 
             }}
+
             style={{ display: "none" }}
           />
         </label>
@@ -251,26 +375,12 @@ function EditProfile() {
     {/* COLUNAS */}
     <div
       className="perfil-duas-colunas-wrapper"
-      style={{
-        display: "flex",
-        gap: "60px",
-        alignItems: "flex-start",
-        flexWrap: "wrap"
-      }}
     >
 
       {/* ESQUERDA */}
-      <div
-        style={{
-          flex: 1,
-          minWidth: "320px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px"
-        }}
-      >
+      <div className="perfil-coluna">
         {/* 4. TROCADO O RÁDIO POR UM SWITCH COMPLETO */}
-        <div style={switchContainer1}>
+       <div className="switch-container">
           <span>Possui endereço físico?</span>
           <input
             type="checkbox"
@@ -279,23 +389,23 @@ function EditProfile() {
           />
         </div>
         
-        <input name="name" value={form.name} onChange={handleChange} placeholder="Nome" style={inputStyle} />
+        <input name="name" value={form.name} onChange={handleChange} placeholder="Nome" className="input-style" />
 
         <textarea
           name="bio"
           value={form.bio}
           onChange={handleChange}
           placeholder="Bio"
-          style={{ ...inputStyle, minHeight: "100px" }}
+          className="input-default textarea-bio"
         />
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div className="row-flex">
           {/* Estado (Select) */}
           <select 
             name="state" 
             value={form.state} 
             onChange={handleChange} 
-            style={{ ...inputStyle, width: "35%", backgroundColor: "white" }}
+            className="input-default select-small"
           >
             <option value="" disabled>UF</option>
             {estadosBR.map((sigla) => (
@@ -304,17 +414,17 @@ function EditProfile() {
               </option>
             ))}
           </select>
-          <input name="city" value={form.city} onChange={handleChange} placeholder="Cidade" style={inputStyle} />
+          <input name="city" value={form.city} onChange={handleChange} placeholder="Cidade" className="input-style" />
         </div>
 
         {form?.physical_address === true && (
           <>
-            <input name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder="Bairro" style={inputStyle} />
-            <input name="address" value={form.address} onChange={handleChange} placeholder="Logradouro" style={inputStyle} />
+            <input name="neighborhood" value={form.neighborhood} onChange={handleChange} placeholder="Bairro" className="input-style" />
+            <input name="address" value={form.address} onChange={handleChange} placeholder="Logradouro" className="input-style" />
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              <input name="address_number" value={form.address_number} onChange={handleChange} placeholder="Nº" style={inputStyle} />
-              <input name="address_complement" value={form.address_complement} onChange={handleChange} placeholder="Complemento" style={inputStyle} />
+            <div className="row-flex">
+              <input name="address_number" value={form.address_number} onChange={handleChange} placeholder="Nº" className="input-style" />
+              <input name="address_complement" value={form.address_complement} onChange={handleChange} placeholder="Complemento" className="input-style"/>
             </div>
           </>
         )}
@@ -322,7 +432,7 @@ function EditProfile() {
         {/* DOADOR */}
         {form?.is_donor === true && (
           <>
-            <div style={switchContainer1}>
+            <div className="switch-container">
               <span>Retirada no local</span>
               <input
                 type="checkbox"
@@ -331,7 +441,7 @@ function EditProfile() {
               />
             </div>
 
-            <div style={switchContainer2}>
+            <div className="switch-container switch-container-spaced">
               <span>Disponibilidade imediata</span>
               <input
                 type="checkbox"
@@ -346,13 +456,13 @@ function EditProfile() {
 
       {/* DIREITA */}
 
-      <div style={{ flex: 1, minWidth: "320px" }}>
+      <div className="perfil-coluna">
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="column-flex">
           {/* RECEBEDOR */}
           {form?.is_donor == false  && (
             <>
-              <div style={switchContainer1}>
+              <div className="switch-container">
                 <span>Aceitando doação</span>
                 <input
                   type="checkbox"
@@ -361,7 +471,7 @@ function EditProfile() {
                 />
               </div>
 
-              <div style={switchContainer2}>
+              <div className="switch-container switch-container-spaced">
                 <span>Aceita alimento para pet</span>
                 <input
                   type="checkbox"
@@ -371,49 +481,55 @@ function EditProfile() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <label style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#64748b"
-                }}>
+                <label className="label-default">
                   Restrições de certos alimentos
                 </label>
 
                 <textarea
                   name="food_restrictions"
                   value={form.food_restrictions}
-                  onChange={handleChange}
+                  onChange={handleChange_sugestion}
                   placeholder="Ex: congelados, carne, bebidas"
-                  style={inputStyle}
+                  className="input-default"
                 />
+                {suggestions.length > 0 && (
+                  <ul className="suggestions-list">
+                    {suggestions.map((s, index) => (
+                      <li
+                        key={index}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // 🔥 impede perder o foco
+                          handleSuggestionClick(s);
+                        }}
+                        className="suggestion-item"
+                      >
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </>
           )}
         </div>
 
         {form?.is_donor === true && (
-          <div style={{ width: "100%" }}>
-            <label style={{ fontWeight: "bold", marginBottom: "12px", display: "block", color: "#334155" }}>
+          <div style={{ width: "100%", height: "100%"}}>
+            <label  className="food-title">
               Alimentos Disponíveis
             </label>
 
             {/* CABEÇALHO DAS COLUNAS */}
-            <div style={{ 
-              display: "flex", 
-              gap: "10px", 
-              paddingLeft: "5px", 
-              marginBottom: "5px",
-              alignItems: "center" 
-            }}>
-              <span style={{ ...headerLabelStyle, flex: 1, minWidth: "150px" }}>Item</span>
-              <span style={{ ...headerLabelStyle, width: "165px" }}>Tamanho / Medida</span>
-              <span style={{ ...headerLabelStyle, width: "95px" }}>Quantidade</span>
+            <div className="food-header">
+              <span className="header-label-item">Item</span>
+              <span className="header-label-tamanho">Tamanho / Medida</span>
+              <span className="header-label-qty">Quantidade</span>
             </div>
 
             <div className="food-container">
               {foodList.map((row, index) => (
-                <div key={index} style={{ marginBottom: "15px" }}>
-                  <div className="food-row" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div key={index} className = "row-flex">
+                  <div className="food-row">
                     
                     {/* 1. SELETOR DO ITEM */}
                     <div className="custom-select-wrapper" style={{ flex: 1, minWidth: "150px" }}>
@@ -444,7 +560,7 @@ function EditProfile() {
                             onClick={(e) => e.stopPropagation()} 
                           />
                           
-                          <div className="options-list" style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                          <div className="options-list">
                             {expandedMarketItems
                               .filter(item => 
                                 item.toLowerCase().includes((row.search || "").toLowerCase())
@@ -492,52 +608,82 @@ function EditProfile() {
                     </div>
 
                     {/* 2. TAMANHO/MEDIDA (Ex: 2 Litros) */}
-                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                    <div className="measure-group">
                       <input
                         type="number"
                         min="0"
                         step="any"
                         placeholder="Ex: 2"
                         value={row.measureValue ?? ""}
-                        onChange={(e) => handleFoodChange(index, "measureValue", e.target.value)}
-                        style={{ ...inputStyle, width: "70px", textAlign: "center", padding: "10px 5px" }}
+                        
+                        // DIGITAÇÃO LIVRE
+                        onChange={(e) => {
+                          handleFoodChange(index, "measureValue", e.target.value);
+                        }}
+
+                        // VALIDAÇÃO DEPOIS
+                        onBlur={(e) => {
+                          let value = Number(e.target.value);
+
+                          if (!value || value < 1) value = 1;
+
+                          handleFoodChange(index, "measureValue", value);
+                        }}
+
+                        className="input-default-food"
                       />
+
                       <select
                         value={row.unit}
                         onChange={(e) => handleFoodChange(index, "unit", e.target.value)}
-                        style={{ ...inputStyle, width: "80px", padding: "10px 5px", backgroundColor: "white" }}
+                        className="input-style-food"
                       >
                         <option value="un">un</option>
                         <option value="kg">kg</option>
                         <option value="g">g</option>
-                        <option value="L">Litros</option>
+                        <option value="L">L</option>
                         <option value="ml">ml</option>
                       </select>
                     </div>
 
                     {/* 3. QUANTIDADE FINAL (Ex: 5 unidades) */}
                     {row.unit !== 'un' ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <div className="quantity-group">
                         <input
                           type="number"
                           min="1"
                           value={row.quantity}
-                          onChange={(e) => handleFoodChange(index, "quantity", e.target.value)}
-                          style={{ ...inputStyle, width: "50px", textAlign: "center", padding: "8px 2px" }}
+
+                          // DIGITAÇÃO LIVRE
+                          onChange={(e) => {
+                            handleFoodChange(index, "quantity", e.target.value);
+                          }}
+
+                          // VALIDAÇÃO NO FINAL
+                          onBlur={(e) => {
+                            let value = Number(e.target.value);
+
+                            if (!value || value < 1) value = 1;
+
+                            handleFoodChange(index, "quantity", value);
+                          }}
+
+                          className="input-style-quantity"
                         />
-                        <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "bold" }}>un</span>
+
+                        <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "bold" }}>
+                          un
+                        </span>
                       </div>
                     ) : (
-                      /* Div vazia para manter o alinhamento quando escondido */
                       <div style={{ width: "100%" }}></div>
                     )}
 
                     {/* REMOVER */}
                     <button 
                       type="button"
-                      className="btn-remove-food-circle"
                       onClick={() => handleRemoveFoodRow(index)}
-                      style={{ marginLeft: "5px" }}
+                      className="btn-remove-food-circle spaced"
                     >
                       ✕
                     </button>
@@ -545,7 +691,7 @@ function EditProfile() {
 
                   {/* CAMPO EXTRA PARA "OUTRO" */}
                   {row.item === "Outro" && (
-                    <div style={{ position: 'relative', marginTop: '5px', marginBottom: '10px' }}>
+                    <div className="custom-input-wrapper">
                       <input
                         type="text"
                         placeholder="Digite o nome e aperte Enter..."
@@ -565,14 +711,7 @@ function EditProfile() {
                           }
                         }}
                         autoFocus
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          borderRadius: "8px",
-                          border: "1px solid #3897f0",
-                          backgroundColor: "#f0f7ff",
-                          fontSize: "14px"
-                        }}
+                        className="custom-input"
                       />
                     </div>
                   )}
@@ -584,7 +723,6 @@ function EditProfile() {
               type="button" 
               onClick={handleAddFoodRow}
               className="btn-add-food"
-              style={{ marginTop: "10px" }}
             >
               + Adicionar outro item
             </button>
@@ -595,81 +733,18 @@ function EditProfile() {
     </div>
 
     {/* BOTÃO SALVAR */}
-    <div style={{ textAlign: "center", marginTop: "40px" }}>
-      <button onClick={handleSave} style={buttonStyle}>
+    <div className="footer-actions">
+      <button onClick={handleSave} className="btn-primary-prof_edition">
         Salvar Alterações
+      </button>
+      <button onClick={() => navigate(-1)} className="btn-secondary-prof_edition">
+        Sair
       </button>
     </div>
 
   </div>
-)
+  )
   
-      
 }
-/* 🎨 Styles */
-
-const avatarStyle = {
-  width: 90,
-  height: 90,
-  borderRadius: "50%",
-  objectFit: "cover"
-};
-
-const editPhotoStyle = {
-  color: "#3897f0",
-  cursor: "pointer",
-  fontSize: "14px",
-  fontWeight: "500"
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  borderRadius: "10px",
-  border: "1px solid #e2e8f0",
-  fontSize: "14px",
-  outline: "none"
-};
-
-const switchContainer1 = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "12px",
-  backgroundColor: "#f8fafc",
-  borderRadius: "8px",
-  fontSize: "14px",
-  color: "#64748b",
-};
-
-const switchContainer2 = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "12px",
-  backgroundColor: "#f8fafc",
-  borderRadius: "8px",
-  fontSize: "14px",
-  color: "#64748b",
-  marginBottom:"20px"
-};
-
-const buttonStyle = {
-  width: "250px", // Ajustado para não ocupar a tela toda no centro
-  padding: "14px",
-  background: "#3897f0",
-  color: "white",
-  border: "none",
-  borderRadius: "10px",
-  cursor: "pointer",
-  fontWeight: "bold",
-  fontSize: "16px"
-};
-const headerLabelStyle = {
-  fontSize: "12px",
-  fontWeight: "bold",
-  color: "#64748b",
-  marginBottom: "5px"
-};
 
 export default EditProfile;

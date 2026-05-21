@@ -1,25 +1,24 @@
 /* --- AJUSTE NO CONTAINER PRINCIPAL --- */
 .profile-page {
   display: flex;
-  width: 100%; /* Garante que ocupe a largura toda */
-  min-height: 100vh;
+  width: 100%;
   font-family: Arial, Helvetica, sans-serif;
   background: #f6f7f7;
   margin: 0;
   padding: 0;
-  align-items: stretch; /* Garante que a sidebar e o conteúdo tenham a mesma altura */
+  align-items:  flex-start;
 }
 /* SIDEBAR */
 
 .sidebar {
   width: 230px;
-  min-width: 230px; /* Impede a sidebar de encolher */
+  min-width: 230px;
   background: #e7f0ec;
   padding: 30px 20px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  position: sticky;
+  height: fit-content;
+  align-self: flex-start;
   top: 0;
 }
 
@@ -33,22 +32,19 @@
   padding:10px 0;
   width: 100%;
 }
-/* .sidebar.active{
-  align-items:center;
-} */
 
 .sidebar li {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Alinha o texto à esquerda, não no centro */
-  padding: 10px 20px; /* Ajustado preenchimento lateral */
+  justify-content: flex-start; 
+  padding: 10px 20px; 
   border-radius: 8px;
   margin-bottom: 16px;
   cursor: pointer;
   background: white;
   transition: all 0.2s ease;
   white-space: nowrap;
-  height: 45px; /* Aumentado para caber o texto confortavelmente */
+  height: 45px; /* Aumentado para caber o texto com folga*/
   width: 100%;
   font-size: 17px
 }
@@ -83,8 +79,20 @@
 
 .profile-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /*  sobe a foto naturalmente */
   gap: 16px;
+}
+
+.profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.top-row {
+  display: flex;
+  align-items: center;
 }
 
 .avatar {
@@ -93,16 +101,13 @@
   border-radius: 12px;
 }
 
-/* .profile-photo {
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-  margin-top:-15px
-} */
 .profile-photo {
+  width: 85px;
+  height: 75px;
+  border-radius: 50%;
+  overflow: hidden;
   position: relative;
-  width: 80px;
-  height: 80px;
+  margin-top: 50px;
 }
 
 .profile-photo img {
@@ -110,41 +115,12 @@
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+  overflow: hidden;
+  
 }
-
-/* BOTÃO BONITO E DISCRETO */
-.back-btn-overlay {
-  position: absolute;
-  top: -60px;
-  left: 20px;
-
-  width: 28px;
-  height: 28px;
-
-  border-radius: 50%;
-  border: none;
-
-  background: #000000;
-  color: white;
-  opacity: 60%;
-  font-size: 14px;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.2s;
-}
-
 /* hover suave */
 .back-btn-overlay:hover {
   background: rgb(80, 80, 81);
-}
-
-.profile-info h1{
-  display: flex;
-  flex-direction: column;
-  font-size:26px;
 }
 
 .online-dot{
@@ -158,18 +134,20 @@
 
 .location{
   color:#666;
-  font-size:16px;
-  margin: 10px 0;
+  font-size:14px;
+  margin: 5px 0;
 }
 
 .bio{
-  margin:18px 0;
+  margin: 8px 0;
+  margin-bottom: 5px;
   color:#444;
   font-size: 17px
 }
 
 .profile-buttons{
   margin-top:10px;
+  margin-bottom: 4px;
 }
 
 .btn-primary-profile{
@@ -227,7 +205,6 @@
   display: flex;
   gap: 20px;
   margin-bottom: 30px;
-  /* O stretch faz o card da esquerda esticar até a altura do mapa */
   align-items: stretch; 
   flex-wrap: wrap;
 }
@@ -237,10 +214,8 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  /* Flex: 1 faz com que eles tentem ocupar o mesmo espaço horizontal */
   flex: 1; 
   min-width: 350px;
-  /* Garante que o conteúdo interno também se comporte bem */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -260,6 +235,7 @@
   display:flex;
   align-items:center;
   gap:8px;
+  font-size:16px !important;
 }
 
 .help{
@@ -273,8 +249,26 @@
   font-size:12px;
 }
 
-.restriction-tags{
-  margin-top:10px;
+.restriction-tags-container {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.restriction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  white-space: nowrap;   /*  impede quebrar o texto */
+  display: inline-block; /* garante comportamento de "caixinha" */
+  padding: 6px 12px;
+  background: #e2e8f0;
+  border-radius: 20px;
+  font-size: 13px;
+  margin-top:8px;
 }
 
 .restriction-tags span{
@@ -285,9 +279,34 @@
   font-size:13px;
 }
 
+.restriction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px; /* espaço entre tags */
+  margin-top: 10px;
+}
+
+.restriction-tags-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.restriction-tags-container::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.tag {
+  display: inline-block;
+  white-space: nowrap; /* Não quebra palavra */
+  padding: 6px 14px;
+  background: #e2e8f0;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
 /* SEGUNDO CONTAINER (Mapa) */
 .map-card {
-  flex: 1.5 !important; /* Dá um pouco mais de destaque ao mapa */
+  flex: 1.5 !important;
 }
 
 .map-card iframe{
@@ -302,30 +321,22 @@
 /* GALERIA */
 
 .gallery h2{
-  margin-bottom:15px;
+  margin-top: 0px;
   margin-bottom: 40px;
 }
 
 .gallery-grid{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap:30px;
   row-gap: 22px;
 }
 
-.gallery-grid.owner{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:30px;
-  row-gap: 22px;
-  margin-left:-250px;
-}
 
-.gallery-grid img{
-  width:100%;
-  border-radius:10px;
-  height:160px;
-  object-fit:cover;
+.gallery-grid img {
+  width: 100%;
+  aspect-ratio: 3 / 4; /*  igual ao crop */
+  object-fit: cover;
 }
 
 .gallery-grid img:hover{
@@ -366,14 +377,14 @@
 }
 
 .switch-row span {
-  font-size: 16px; /* Texto maior para melhor leitura */
+  font-size: 16px; 
   color: #333;
   font-weight: 500;
   font-size: 16px
 
 }
 .status-text {
-  font-size: 16px; /* Texto do Sim/Não também maior */
+  font-size: 16px;
   font-weight: bold;
 }
 
@@ -385,37 +396,50 @@
 
 
 .online {
-  background-color: #4caf50; /* verde */
+  background-color: #4caf50; 
 }
 
 .offline {
-  background-color: #9e9e9e; /* cinza */
+  background-color: #9e9e9e; 
 }
 .name-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size:24px
+  gap: 12px; 
+  margin-top: 15px;
+  margin-left: 8px;
 }
 
-.profile-rating-inline {
-  margin-top: 10px;
+.name-row h1 {
+  margin: 0;
+}
+
+.profile-stats {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: center; 
+  gap: 10px;
+  margin-left: 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.stat-item {
+  background: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: 8px;
   font-size: 14px;
-  color: #444;
+  font-weight: 500;
 }
 
-.star-icon {
-  color: #f5b50a;
+.stat-item.clickable {
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.stat-item.clickable:hover {
+  background: #e2e8f0;
 }
+
 /* CONTAINER DE ROLAGEM */
 .food-display-scroll-container {
   max-height: 220px;
@@ -424,7 +448,7 @@
   border-radius: 14px;
   padding: 12px;
   background-color: #f8fafb;
-  margin-top: 15px; /* Espaçamento que você pediu */
+  margin-top: 15px; 
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
 /* LINHA DE CADA ALIMENTO */
@@ -469,25 +493,24 @@
   font-size: 13px;
 }
 .food-badge {
-  background-color: #58af9b; /* Cor original do badge */
+  background-color: #58af9b; 
   color: white;
   padding: 4px 12px;
-  border-radius: 20px; /* Garante o formato de pílula/bolinha */
+  border-radius: 20px;
   font-size: 12px;
   font-weight: bold;
   border: none;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  min-width: 45px; /* Mantém um padrão visual */
+  min-width: 45px;
   gap: 4px
 }
 
-/* Ajuste para que o vídeo no grid pareça uma foto (thumbnail) */
 .video-thumbnail-container {
+  width: 100%;
+  aspect-ratio: 4 / 5; /*  igual às imagens */
   position: relative;
-  height: 160px; /* Mesma altura que você deu para as imgs */
-  cursor: pointer;
   overflow: hidden;
   border-radius: 10px;
 }
@@ -510,36 +533,14 @@
   text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-/* 1. CAMADA DE FUNDO (Overlay) - Embaçada */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* Preto translúcido */
-  
-  /* 🟢 O SEGREDO DO EMBAÇADO: Funciona nos navegadores modernos */
-  backdrop-filter: blur(8px); 
-  -webkit-backdrop-filter: blur(8px); /* Para Safari */
-  
-  display: flex;
-  justify-content: center;
-  align-items: center; /* Centralização total no meio da tela */
-  z-index: 2000; /* Garante que fique na frente de tudo */
-  padding: 20px;
-  animation: fadeInModal 0.3s ease;
-}
-
 /* 2. CONTAINER DO CONTEÚDO - Tamanho Definido */
 .modal-content {
   background: white;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   overflow: hidden; /* Importante para o container cinza embaixo */
-  /* 🟢 TAMANHO DEFINIDO: Largura fixa, mas responsiva */
   width: 100%;
-  max-width: 550px; /* Largura ideal para fotos de perfil/galeria */
+  max-width: 550px; 
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -572,7 +573,7 @@
 .modal-footer-message {
   width: 100%;
   padding: 15px 20px;
-  background-color: #eee; /* 🟢 O CINZA QUE VOCÊ PEDIU */
+  background-color: #eee; 
   border-top: 1px solid #ddd;
   text-align: center;
   color: #333;
@@ -593,7 +594,6 @@
   /* Garante tamanho igual */
   width: 35px; 
   height: 35px;
-  /* Força o círculo */
   border-radius: 50%; 
   display: flex;
   align-items: center;
@@ -605,7 +605,6 @@
   cursor: pointer;
   font-size: 20px;
   font-weight: bold;
-  /* Evita que o "X" saia do centro se o botão for flex */
   line-height: 0; 
   padding: 0;
 }
@@ -652,7 +651,7 @@
   width: 100%;
   padding: 8px;
   border-radius: 5px;
-  border: 1px solid #ccc;
+  border: 1px solid #ccc; 
 }
 
 .edit-container button {
@@ -664,8 +663,8 @@
 
 .button_google_maps {
   position: absolute;
-  top: 10px;    /* Distância do topo */
-  right: 10px;  /* Distância da direita */
+  top: 10px;   
+  right: 10px;  
   z-index: 1001; /* Maior que o z-index padrão do Leaflet (1000) */
   
   background-color: white;
@@ -718,12 +717,14 @@
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(6px); /* 🔥 desfoque */
+  backdrop-filter: blur(6px); /*  desfoque */
   background: rgba(0,0,0,0.3);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
 }
 
 .rating-modal {
@@ -734,6 +735,8 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  z-index: 1000000;
+  position: relative;
 }
 
 .ratings-list {
@@ -781,4 +784,181 @@
   font-size: 13px;
   color: #777;
   margin-top: 4px;
+}
+
+.profile-back-wrapper {
+  position: relative;
+  width: auto;        
+  height: auto; 
+}
+
+/*  FORÇA o botão a respeitar esse container */
+.profile-back-wrapper button {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 5;
+}
+.profile-main {
+  margin-top: -10px; /*  sobe nome e infos */
+  gap:10px
+}
+
+.profile-back-wrapper button:hover{
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.gallery-full {
+  width: 100%;
+  padding: 40px;
+}
+
+.menu-btn {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
+    width: 260px;
+    height: 100%;
+    z-index: 1002; /* Maior que o z-index padrão do Leaflet (1000) */
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    /* gap: 16px; */
+  }
+
+  .profile-page {
+    flex-direction: column;
+  }
+
+  .profile-content {
+    padding: 20px;
+    align-self: center;
+    max-width: 100% !important;
+    width: 70% !important;
+  }
+  .gallery-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .gallery-grid img,
+  .video-thumbnail-container {
+    width: 100%;
+    aspect-ratio: 3 / 4; 
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-photo {
+    margin-top: 20px;
+    width: 70px;
+    height: 70px;
+  }
+
+  .name-row {
+    justify-content: center;
+    margin-left: 0;
+  }
+  .profile-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-primary-profile,
+  .btn-secondary-profile {
+    width: 90%;
+    margin: 8px 0;
+    font-size: 15px;
+  }
+  .profile-cards {
+    flex-direction: column;
+  }
+
+  .profile-cards .card {
+    min-width: 100%;
+    max-height: none;
+  }
+
+  .map-card {
+    flex: unset !important;
+  }
+  .gallery-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+  .bio {
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .location {
+    font-size: 14px;
+  }
+  .menu-btn {
+    display: block;
+    color:black !important;
+  }
+  
+  .profile-cards .card {
+    font-size: 15x; /* diminui tudo dentro do card */
+  }
+
+  .food-item-row {
+    font-size: 14px; 
+  }
+  .food-name{
+    font-size: 14px !important;
+  }
+  .food-badge{
+    font-size: 14px !important
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .gallery-grid img,
+  .video-thumbnail-container {
+    width: 100%;
+    aspect-ratio: 3 / 4; 
+    object-fit: cover;
+    border-radius: 8px;
+  }
+   .food-item-row {
+    font-size: 14px;
+  }
+  .food-name{
+    font-size: 14px !important;
+  }
+  .food-badge{
+    font-size: 14px !important
+  }
+  .bio {
+    font-size: 16px;
+    text-align: center;
+  }
+
 }

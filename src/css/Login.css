@@ -18,6 +18,17 @@ body {
     height: 100%;
     background-color: #ecf0f1;
 }
+.login-content::before {
+  animation: none;
+}
+
+.animate.sign-in-js .login-content::before {
+  animation: slidein 1.3s;
+}
+
+.animate.sign-up-js .login-content::before {
+  animation: slideout 1.3s;
+}
 .login-content {
     background-color: #fff;
     border-radius: 15px;
@@ -48,8 +59,11 @@ body {
     color: #fff;
 }
 .title-second {
-    color: #58af9b;
+    color: #2b2929;
+    margin-bottom: -5px;
+    /* margin-top:-px */
 }
+
 .login-description {
     font-size: 14px;
     font-weight: 300;
@@ -238,15 +252,49 @@ input:-webkit-autofill
 
     z-index: -1;
     position: relative;
-    animation: deslocamentoEsq 1.3s; /*MODIFIQUEI DE 3s PARA 1.3s*/
+    animation: deslocamentoEsq 1.3s; 
 }
 
 .sign-up-js .second-content .login-second-column {
     position: relative;
     z-index: -1;
-    animation: deslocamentoDir 1.3s; /*MODIFIQUEI DE 3s PARA 1.3s*/
+    animation: deslocamentoDir 1.3s; 
+}
+.login-logo {
+  width: 200px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top:-50px
 }
 
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #eee;
+  border-top: 5px solid #27ae60;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 /*ANIMAÇÃOO CSS PARA O CONTEÚDO*/
 
 @keyframes deslocamentoEsq {
@@ -260,13 +308,11 @@ input:-webkit-autofill
     25% {
         left: -80px;
         opacity: .5;
-        /* z-index: 12; NÃO HÁ NECESSIDADE */
     }
 
     50% {
         left: -100px;
         opacity: .2;
-        /* z-index: 12; NÃO HÁ NECESSIDADE */
     }
 
     to {
@@ -286,13 +332,10 @@ input:-webkit-autofill
 
     25% {
         left: 80px;
-        /* z-index: 12;  NÃO HÁ NECESSIDADE*/
     }
 
     50% {
         left: 100px;
-        /* z-index: 12; NÃO HÁ NECESSIDADE*/
-        /* background-color: yellow;  Exemplo que dei no vídeo*/
     }
 
     to {

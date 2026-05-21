@@ -93,7 +93,7 @@ function ConfigPage() {
 
   const handleDeleteAccount = async () => {
     if (window.confirm("ATENÇÃO: Deseja realmente excluir sua conta? Esta ação é irreversível.")) {
-      setLoading(true); // É legal colocar um loading para o usuário não clicar duas vezes
+      setLoading(true); // Para o usuário não clicar duas vezes
       try {
         // 1. Apaga os dados da tabela profiles. 
         // A nossa trigger no banco vai ouvir isso e apagar o Auth automaticamente!
@@ -105,7 +105,7 @@ function ConfigPage() {
         await supabase.auth.signOut();
         
         alert("Sua conta foi excluída com sucesso.");
-        navigate("/"); // Redireciona para a home
+        navigate("/"); // Redireciona para o Login
         
       } catch (err) {
         console.error(err);
@@ -117,87 +117,89 @@ function ConfigPage() {
   };
 
   return (
-    <div className="config-container">
-
-      <h1>Configurações</h1>
-
-      {/* 🔒 PRIVACIDADE E SEGURANÇA */}
-      <section className="config-section">
-        <div className="config-back-button">
-          <BackButton to="/profile" />
-          <h2>Privacidade e Segurança</h2>
-        </div>
-        <div className="config-item">
-          <label>Mostrar apenas para usuários do tipo oposto</label>
-          <input type="checkbox" checked={settings.show_only_to_opposite} onChange={() => handleToggle("show_only_to_opposite")} />
-        </div>
-        <div className="config-item">
-          <label>Mostrar minha localização exata</label>
-          <input type="checkbox" checked={settings.show_exact_location} onChange={() => handleToggle("show_exact_location")} />
-        </div>
-        <div className="config-item">
-          <label>Exibir meu perfil no mapa</label>
-          <input type="checkbox" checked={settings.show_on_map} onChange={() => handleToggle("show_on_map")} />
-        </div>
-      </section>
-
-      {/* 💬 CONVERSAS */}
-      <section className="config-section">
-        <h2>Conversas</h2>
-        <div className="config-item">
-          <label>Permitir que outros iniciem conversa comigo</label>
-          <input type="checkbox" checked={settings.allow_chat_requests} onChange={() => handleToggle("allow_chat_requests")} />
-        </div>
-        <div className="config-item">
-          <label>Usuários bloqueados</label>
-          <button className="config-button" onClick={() => setShowBlockModal(true)}>
-            Gerenciar bloqueios
-          </button>
-        </div>
-      </section>
-
-      {/* 💾 BOTÕES DE SALVAR E SAIR */}
-      <div className="action-buttons-container" style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
-        <button 
-          className="config-button save-btn" 
-          onClick={handleSave} 
-          disabled={loading}
-          style={{ flex: 3, backgroundColor: '#58af9b', color: 'white', fontWeight: 'bold' }}
-        >
-          {loading ? "Salvando..." : "Salvar Alterações"}
-        </button>
-        
-        <button 
-          className="config-button logout-btn" 
-          onClick={() => navigate("/profile")}
-        >
-          Sair
-        </button>
+    <>
+      <div className="config-back-button">
+        <BackButton />
       </div>
+      
+      <div className="config-container">
+        <h1>Configurações</h1>
 
-      {/* 🧾 DADOS DA CONTA */}
-      <section className="config-section">
-        <h2>Dados da Conta</h2>
-        <div className="config-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginLeft: '20px', marginRight: '20px', marginTop:'30px'}}>
-          <button className="config-button" onClick={handleChangePassword} style={{ backgroundColor: '#58af9b', color: 'white' }}>
-            Alterar senha
+        {/*  PRIVACIDADE E SEGURANÇA */}
+        <section className="config-section">
+          <h2>Privacidade e Segurança</h2>
+          <div className="config-item">
+            <label>Mostrar apenas para usuários do tipo oposto</label>
+            <input type="checkbox" checked={settings.show_only_to_opposite} onChange={() => handleToggle("show_only_to_opposite")} />
+          </div>
+          <div className="config-item">
+            <label>Mostrar minha localização exata</label>
+            <input type="checkbox" checked={settings.show_exact_location} onChange={() => handleToggle("show_exact_location")} />
+          </div>
+          <div className="config-item">
+            <label>Exibir meu perfil no mapa</label>
+            <input type="checkbox" checked={settings.show_on_map} onChange={() => handleToggle("show_on_map")} />
+          </div>
+        </section>
+
+        {/*  CONVERSAS */}
+        <section className="config-section">
+          <h2>Conversas</h2>
+          <div className="config-item">
+            <label>Permitir que outros iniciem conversa comigo</label>
+            <input type="checkbox" checked={settings.allow_chat_requests} onChange={() => handleToggle("allow_chat_requests")} />
+          </div>
+          <div className="config-item">
+            <label>Usuários bloqueados</label>
+            <button className="config-button" onClick={() => setShowBlockModal(true)}>
+              Gerenciar bloqueios
+            </button>
+          </div>
+        </section>
+
+        {/*  BOTÕES DE SALVAR E SAIR */}
+        <div className="action-buttons-container" style={{ display: 'flex', gap: '10px', margin: '20px 0' }}>
+          <button 
+            className="config-button save-btn" 
+            onClick={handleSave} 
+            disabled={loading}
+            style={{ flex: 3, backgroundColor: '#58af9b', color: 'white', fontWeight: 'bold' }}
+          >
+            {loading ? "Salvando..." : "Salvar Alterações"}
           </button>
-          <button className="config-button danger" onClick={handleDeleteAccount}>
-            Excluir conta
+          
+          <button 
+            className="config-button logout-btn" 
+            onClick={() => navigate("/profile")}
+          >
+            Sair
           </button>
         </div>
-      </section>
 
-      {/* MODAL */}
-      {showBlockModal && (
-        <BlockManagerModal 
-          myId={myId} 
-          currentBlocked={settings.blocked_users_list}
-          onUpdate={(newList) => setSettings(prev => ({ ...prev, blocked_users_list: newList }))}
-          onClose={() => setShowBlockModal(false)} 
-        />
-      )}
-    </div>
+        {/*  DADOS DA CONTA */}
+        <section className="config-section">
+          <h2>Dados da Conta</h2>
+          <div className="config-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginLeft: '20px', marginRight: '20px', marginTop:'30px'}}>
+            <button className="config-button-senha" onClick={handleChangePassword} style={{ backgroundColor: '#58af9b', color: 'white' }}>
+              Alterar senha
+            </button>
+            <button className="config-button-danger" onClick={handleDeleteAccount}>
+              Excluir conta
+            </button>
+          </div>
+        </section>
+
+        {/* MODAL */}
+        {showBlockModal && (
+          <BlockManagerModal 
+            myId={myId} 
+            currentBlocked={settings.blocked_users_list}
+            onUpdate={(newList) => setSettings(prev => ({ ...prev, blocked_users_list: newList }))}
+            onClose={() => setShowBlockModal(false)} 
+          />
+        )}
+      </div>
+    </>
   );
 }
 

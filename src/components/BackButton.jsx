@@ -6,10 +6,10 @@ function BackButton() {
   return (
     <button
       onClick={() => {
-        if (window.history.length > 1) {
+        if (document.referrer) {
           navigate(-1)
         } else {
-          navigate("/profile") // ou qualquer rota padrão
+          navigate("/profile")
         }
       }}
       style={{
