@@ -1,16 +1,41 @@
-# React + Vite
+# FoodBridge 🍽️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FoodBridge é uma plataforma web desenvolvida para conectar doadores de alimentos, ONGs e pessoas em situação de vulnerabilidade, facilitando a doação de forma prática, segura e acessível.
 
-Currently, two official plugins are available:
+O projeto foi desenvolvido utilizando React + Vite, com foco em responsividade, usabilidade e integração em tempo real.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Tecnologias Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- Vite
+- JavaScript
+- CSS
+- Supabase
+- React Router DOM
+- React Leaflet
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📌 Funcionalidades
+
+- Cadastro e autenticação de usuários
+- Perfis de doadores e recebedores
+- Sistema de chat
+- Filtros avançados de pesquisa
+- Mapa interativo com localização aproximada
+- Sistema de avaliações
+- Controle de privacidade e bloqueios
+- Interface responsiva para desktop e mobile
+
+---
+
+## ⚙️ Como executar o projeto
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/seu-usuario/foodbridge.git
+npm install
+npm run dev
