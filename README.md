@@ -1,6 +1,6 @@
 # FoodBridge 🍽️
 
-FoodBridge é uma plataforma web desenvolvida para conectar doadores de alimentos, ONGs e pessoas em situação de vulnerabilidade, facilitando a doação de forma prática, segura e acessível.
+FoodBridge é uma plataforma web desenvolvida para conectar doadores de alimentos e ONGS, para ajudar pessoas em situação de vulnerabilidade, facilitando a doação de forma prática, segura e acessível.
 
 O projeto foi desenvolvido utilizando React + Vite, com foco em responsividade, usabilidade e integração em tempo real.
 
