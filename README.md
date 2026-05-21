@@ -37,5 +37,7 @@ Clone o repositório:
 
 ```bash
 git clone https://github.com/seu-usuario/foodbridge.git
+```bash
 npm install
+```bash
 npm run dev
