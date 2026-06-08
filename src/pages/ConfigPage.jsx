@@ -10,6 +10,7 @@ function ConfigPage() {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [myId, setMyId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [hasPassword, setHasPassword] = useState(true);
   const navigate = useNavigate()
   
   // Estado que controla TUDO na tela localmente
@@ -25,6 +26,13 @@ function ConfigPage() {
     const loadInitialData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const providers = user.app_metadata?.providers || [];
+
+        // Se só possui Google, não mostra alterar senha
+        setHasPassword(!(
+          providers.length === 1 &&
+          providers.includes("google")
+        ));
         setMyId(user.id);
         
         // Busca perfil e bloqueios atuais do banco de uma vez
@@ -180,9 +188,18 @@ function ConfigPage() {
         <section className="config-section">
           <h2>Dados da Conta</h2>
           <div className="config-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', marginLeft: '20px', marginRight: '20px', marginTop:'30px'}}>
-            <button className="config-button-senha" onClick={handleChangePassword} style={{ backgroundColor: '#58af9b', color: 'white' }}>
+          {hasPassword && (
+            <button
+              className="config-button-senha"
+              onClick={handleChangePassword}
+              style={{
+                backgroundColor: "#58af9b",
+                color: "white"
+              }}
+            >
               Alterar senha
             </button>
+          )}
             <button className="config-button-danger" onClick={handleDeleteAccount}>
               Excluir conta
             </button>
