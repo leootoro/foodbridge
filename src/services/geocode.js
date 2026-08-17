@@ -2,7 +2,7 @@ import {supabase} from "../lib/supabase";
 
 export async function getLatLng(address) {
 
-  const apiKey = "2270a43415d6425ca533ff6f400b96c2"
+  const apiKey = "5035fd3fb89548b7be2871773e180925"
 
   const response = await fetch(
     `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}`
